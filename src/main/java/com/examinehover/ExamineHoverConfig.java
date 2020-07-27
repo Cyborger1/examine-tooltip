@@ -35,9 +35,43 @@ import net.runelite.client.config.Units;
 public interface ExamineHoverConfig extends Config
 {
 	@ConfigItem(
+		keyName = "showItemExamines",
+		name = "Show item examines",
+		description = "Show text from examining items",
+		position = 1
+	)
+	default boolean showItemExamines()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "showObjectExamines",
+		name = "Show object examines",
+		description = "Show text from examining objects (e.g. scenery)",
+		position = 2
+	)
+	default boolean showObjectExamines()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "showNPCExamines",
+		name = "Show NPC examines",
+		description = "Show text from examining NPCs",
+		position = 3
+	)
+	default boolean showNPCExamines()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "hoverTime",
 		name = "Examine timeout",
-		description = "How long to linger the examine hovering textbox"
+		description = "How long to linger the examine hovering textbox",
+		position = 4
 	)
 	@Units(Units.SECONDS)
 	@Range(min = 1, max = 10)

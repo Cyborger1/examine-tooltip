@@ -51,19 +51,14 @@ import net.runelite.client.util.Text;
 )
 public class ExamineHoverPlugin extends Plugin
 {
-	private final static Set<ChatMessageType> examineMessageTypes = new HashSet<>(
-		Arrays.asList(
-			ChatMessageType.ITEM_EXAMINE,
-			ChatMessageType.NPC_EXAMINE,
-			ChatMessageType.OBJECT_EXAMINE
-		)
-	);
-
 	@Inject
 	private OverlayManager overlayManager;
 
 	@Inject
 	private ExamineHoverOverlay examineHoverOverlay;
+
+	@Inject
+	private ExamineHoverConfig config;
 
 	@Getter
 	private EvictingQueue<ExamineTextTime> examines = EvictingQueue.create(5);
@@ -91,7 +86,10 @@ public class ExamineHoverPlugin extends Plugin
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
-		if (examineMessageTypes.contains(event.getType()))
+		ChatMessageType type = event.getType();
+		if ((config.showItemExamines() && type == ChatMessageType.ITEM_EXAMINE)
+			|| (config.showObjectExamines() && type == ChatMessageType.OBJECT_EXAMINE)
+			|| (config.showNPCExamines() && type == ChatMessageType.NPC_EXAMINE))
 		{
 			String text = Text.removeTags(event.getMessage());
 
