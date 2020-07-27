@@ -1,4 +1,4 @@
-package com.examinehover;
+package com.examinetooltip;
 
 import com.google.inject.Inject;
 import java.awt.Dimension;
@@ -9,22 +9,22 @@ import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
 
-public class ExamineHoverOverlay extends Overlay
+public class ExamineTooltipOverlay extends Overlay
 {
 	@Inject
 	private TooltipManager tooltipManager;
 
 	@Inject
-	private ExamineHoverConfig config;
+	private ExamineTooltipConfig config;
 
 	@Inject
-	private ExamineHoverPlugin plugin;
+	private ExamineTooltipPlugin plugin;
 
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
 		Instant now = Instant.now();
-		Duration timeout = Duration.ofSeconds(config.hoverTime());
+		Duration timeout = Duration.ofSeconds(config.tooltipTimeout());
 
 		for (ExamineTextTime examine : plugin.getExamines())
 		{

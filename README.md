@@ -1,4 +1,4 @@
-# Examine Hover
-Adds a hovering text box underneath your cursor when examining things.
+# Examine Tooltip
+Adds a tooltip underneath your cursor when examining things.
 
-![Examine Hover in Action](hover.gif)
+![Examine Tooltip in Action](examine_tooltip.gif)

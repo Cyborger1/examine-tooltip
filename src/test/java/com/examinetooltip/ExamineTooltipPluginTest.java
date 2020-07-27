@@ -23,60 +23,16 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.examinehover;
+package com.examinetooltip;
 
-import net.runelite.client.config.Config;
-import net.runelite.client.config.ConfigGroup;
-import net.runelite.client.config.ConfigItem;
-import net.runelite.client.config.Range;
-import net.runelite.client.config.Units;
+import net.runelite.client.RuneLite;
+import net.runelite.client.externalplugins.ExternalPluginManager;
 
-@ConfigGroup("examinehover")
-public interface ExamineHoverConfig extends Config
+public class ExamineTooltipPluginTest
 {
-	@ConfigItem(
-		keyName = "showItemExamines",
-		name = "Show item examines",
-		description = "Show text from examining items",
-		position = 1
-	)
-	default boolean showItemExamines()
+	public static void main(String[] args) throws Exception
 	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "showObjectExamines",
-		name = "Show object examines",
-		description = "Show text from examining objects (e.g. scenery)",
-		position = 2
-	)
-	default boolean showObjectExamines()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "showNPCExamines",
-		name = "Show NPC examines",
-		description = "Show text from examining NPCs",
-		position = 3
-	)
-	default boolean showNPCExamines()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "hoverTime",
-		name = "Examine timeout",
-		description = "How long to linger the examine hovering textbox",
-		position = 4
-	)
-	@Units(Units.SECONDS)
-	@Range(min = 1, max = 10)
-	default int hoverTime()
-	{
-		return 3;
+		ExternalPluginManager.loadBuiltin(ExamineTooltipPlugin.class);
+		RuneLite.main(args);
 	}
 }

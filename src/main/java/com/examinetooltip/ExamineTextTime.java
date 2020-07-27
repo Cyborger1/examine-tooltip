@@ -1,4 +1,4 @@
-package com.examinehover;
+package com.examinetooltip;
 
 import java.time.Instant;
 import lombok.Builder;

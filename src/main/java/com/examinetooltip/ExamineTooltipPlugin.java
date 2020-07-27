@@ -23,14 +23,11 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.examinehover;
+package com.examinetooltip;
 
 import com.google.common.collect.EvictingQueue;
 import com.google.inject.Provides;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
@@ -45,41 +42,41 @@ import net.runelite.client.util.Text;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Examine Hover",
-	description = "Adds a hovering textbox under the cursor when examining things",
+	name = "Examine Tooltip",
+	description = "Adds a tooltip under the cursor when examining things",
 	tags = {"examine", "hover", "text"}
 )
-public class ExamineHoverPlugin extends Plugin
+public class ExamineTooltipPlugin extends Plugin
 {
 	@Inject
 	private OverlayManager overlayManager;
 
 	@Inject
-	private ExamineHoverOverlay examineHoverOverlay;
+	private ExamineTooltipOverlay examineTooltipOverlay;
 
 	@Inject
-	private ExamineHoverConfig config;
+	private ExamineTooltipConfig config;
 
 	@Getter
 	private EvictingQueue<ExamineTextTime> examines = EvictingQueue.create(5);
 
 	@Provides
-	ExamineHoverConfig provideConfig(ConfigManager configManager)
+	ExamineTooltipConfig provideConfig(ConfigManager configManager)
 	{
-		return configManager.getConfig(ExamineHoverConfig.class);
+		return configManager.getConfig(ExamineTooltipConfig.class);
 	}
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		overlayManager.add(examineHoverOverlay);
+		overlayManager.add(examineTooltipOverlay);
 		examines.clear();
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		overlayManager.remove(examineHoverOverlay);
+		overlayManager.remove(examineTooltipOverlay);
 		examines.clear();
 	}
 
