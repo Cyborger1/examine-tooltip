@@ -44,7 +44,7 @@ import net.runelite.client.util.Text;
 @PluginDescriptor(
 	name = "Examine Tooltip",
 	description = "Adds a tooltip under the cursor when examining things",
-	tags = {"examine", "hover", "text"}
+	tags = {"examine", "tooltip", "text"}
 )
 public class ExamineTooltipPlugin extends Plugin
 {
