@@ -94,4 +94,29 @@ public interface ExamineTooltipConfig extends Config
 	{
 		return 3;
 	}
+
+	@ConfigItem(
+		keyName = "wrapTooltip",
+		name = "Wrap tooltip",
+		description = "Wraps the text in the tooltip if it gets too long",
+		position = 6
+	)
+	default boolean wrapTooltip()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "wrapTooltipColumns",
+		name = "Wrap columns",
+		description = "How many text columns (or characters) before wrapping the text",
+		position = 7
+	)
+	@Range(
+		min = 20
+	)
+	default int wrapTooltipColumns()
+	{
+		return 30;
+	}
 }

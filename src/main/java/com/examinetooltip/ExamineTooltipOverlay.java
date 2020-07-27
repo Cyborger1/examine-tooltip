@@ -8,6 +8,7 @@ import java.time.Instant;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
+import org.apache.commons.text.WordUtils;
 
 public class ExamineTooltipOverlay extends Overlay
 {
@@ -31,7 +32,12 @@ public class ExamineTooltipOverlay extends Overlay
 			Duration since = Duration.between(examine.getTime(), now);
 			if (since.compareTo(timeout) < 0)
 			{
-				tooltipManager.add(new Tooltip(examine.getText()));
+				String text = examine.getText();
+				if (config.wrapTooltip())
+				{
+					text = WordUtils.wrap(text, config.wrapTooltipColumns(), "</br>", false);
+				}
+				tooltipManager.add(new Tooltip(text));
 			}
 		}
 
