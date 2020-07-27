@@ -31,16 +31,31 @@ import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
 
-@ConfigGroup("examinetooltip")
+@ConfigGroup(ExamineTooltipConfig.CONFIG_GROUP)
 public interface ExamineTooltipConfig extends Config
 {
+	String CONFIG_GROUP = "examinetooltip";
+	String ITEM_EXAMINES_KEY_NAME = "showItemExamines";
+
 	@ConfigItem(
-		keyName = "showItemExamines",
+		keyName = ITEM_EXAMINES_KEY_NAME,
 		name = "Show item examines",
 		description = "Show text from examining items",
 		position = 1
 	)
+
 	default boolean showItemExamines()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "showPriceCheck",
+		name = "Show price check",
+		description = "If showing item examines, also show the price check text from the Examine Plugin (\"Price of ...\")",
+		position = 2
+	)
+	default boolean showPriceCheck()
 	{
 		return true;
 	}
@@ -49,7 +64,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showObjectExamines",
 		name = "Show object examines",
 		description = "Show text from examining objects (e.g. scenery)",
-		position = 2
+		position = 3
 	)
 	default boolean showObjectExamines()
 	{
@@ -60,7 +75,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showNPCExamines",
 		name = "Show NPC examines",
 		description = "Show text from examining NPCs",
-		position = 3
+		position = 4
 	)
 	default boolean showNPCExamines()
 	{
@@ -71,7 +86,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "tooltipTimeout",
 		name = "Tooltip timeout",
 		description = "How long to show the examine tooltip",
-		position = 4
+		position = 5
 	)
 	@Units(Units.SECONDS)
 	@Range(min = 1, max = 10)

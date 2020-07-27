@@ -32,9 +32,13 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
 import net.runelite.api.ChatMessageType;
+import net.runelite.api.MenuAction;
 import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -60,6 +64,8 @@ public class ExamineTooltipPlugin extends Plugin
 	@Getter
 	private EvictingQueue<ExamineTextTime> examines = EvictingQueue.create(5);
 
+	private int pendingGMExamines;
+
 	@Provides
 	ExamineTooltipConfig provideConfig(ConfigManager configManager)
 	{
@@ -71,6 +77,7 @@ public class ExamineTooltipPlugin extends Plugin
 	{
 		overlayManager.add(examineTooltipOverlay);
 		examines.clear();
+		pendingGMExamines = 0;
 	}
 
 	@Override
@@ -78,17 +85,73 @@ public class ExamineTooltipPlugin extends Plugin
 	{
 		overlayManager.remove(examineTooltipOverlay);
 		examines.clear();
+		pendingGMExamines = 0;
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (event.getGroup().equals(ExamineTooltipConfig.CONFIG_GROUP)
+			&& event.getKey().equals(ExamineTooltipConfig.ITEM_EXAMINES_KEY_NAME))
+		{
+			pendingGMExamines = 0;
+		}
+	}
+
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged event)
+	{
+		pendingGMExamines = 0;
+	}
+
+	@Subscribe
+	public void onMenuOptionClicked(MenuOptionClicked event)
+	{
+		if (!config.showItemExamines())
+		{
+			return;
+		}
+
+		if (Text.removeTags(event.getMenuOption()).equals("Examine")
+			&& event.getMenuAction() == MenuAction.CC_OP_LOW_PRIORITY)
+		{
+			synchronized (this)
+			{
+				pendingGMExamines++;
+			}
+		}
 	}
 
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
 		ChatMessageType type = event.getType();
-		if ((config.showItemExamines() && type == ChatMessageType.ITEM_EXAMINE)
+		if ((config.showItemExamines() && (type == ChatMessageType.ITEM_EXAMINE || type == ChatMessageType.GAMEMESSAGE))
 			|| (config.showObjectExamines() && type == ChatMessageType.OBJECT_EXAMINE)
 			|| (config.showNPCExamines() && type == ChatMessageType.NPC_EXAMINE))
 		{
+			if (type == ChatMessageType.GAMEMESSAGE)
+			{
+				synchronized (this)
+				{
+					if (pendingGMExamines > 0)
+					{
+						pendingGMExamines--;
+					}
+					else
+					{
+						return;
+					}
+
+				}
+			}
+
 			String text = Text.removeTags(event.getMessage());
+
+			if (!config.showPriceCheck() && type == ChatMessageType.ITEM_EXAMINE && text.startsWith("Price of"))
+			{
+				return;
+			}
 
 			examines.removeIf(e -> e.getText().equals(text));
 			examines.add(ExamineTextTime.builder()
