@@ -40,7 +40,7 @@ public interface ExamineTooltipConfig extends Config
 	@ConfigItem(
 		keyName = "rs3Style",
 		name = "RS3 style examine box",
-		description = "Show examines as a hovering box above the examined items",
+		description = "Show examines as a hovering box under the examined items, else show as cursor tooltip",
 		position = 1
 	)
 
@@ -64,7 +64,7 @@ public interface ExamineTooltipConfig extends Config
 	@ConfigItem(
 		keyName = "showPriceCheck",
 		name = "Show price check",
-		description = "Show the price check text from the Examine Plugin (\"Price of ...\")",
+		description = "Show the price check text from the Examine Plugin (\"Price of ...\"), always shown as cursor tooltip",
 		position = 3
 	)
 	default boolean showPriceCheck()

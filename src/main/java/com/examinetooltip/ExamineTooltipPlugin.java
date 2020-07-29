@@ -46,7 +46,7 @@ import net.runelite.client.util.Text;
 @Slf4j
 @PluginDescriptor(
 	name = "Examine Tooltip",
-	description = "Adds a tooltip under the cursor when examining things",
+	description = "Adds tooltips on screen when examining things",
 	tags = {"examine", "tooltip", "text"}
 )
 public class ExamineTooltipPlugin extends Plugin
@@ -61,9 +61,9 @@ public class ExamineTooltipPlugin extends Plugin
 	private ExamineTooltipConfig config;
 
 	@Getter
-	private EvictingQueue<ExamineTextTime> examines = EvictingQueue.create(5);
+	private final EvictingQueue<ExamineTextTime> examines = EvictingQueue.create(5);
 
-	private Queue<ExamineTextTime> pendingExamines = new ArrayDeque<>();
+	private final Queue<ExamineTextTime> pendingExamines = new ArrayDeque<>();
 
 	@Provides
 	ExamineTooltipConfig provideConfig(ConfigManager configManager)

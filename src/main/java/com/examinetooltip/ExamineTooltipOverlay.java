@@ -40,7 +40,7 @@ import org.apache.commons.text.WordUtils;
 
 public class ExamineTooltipOverlay extends Overlay
 {
-	private static int PADDING = 5;
+	private final static int PADDING = 5;
 
 	@Inject
 	private TooltipManager tooltipManager;
@@ -57,7 +57,7 @@ public class ExamineTooltipOverlay extends Overlay
 	@Inject
 	private Client client;
 
-	private Map<ExamineTextTime, Dimension> dimMap = new HashMap<>();
+	private final Map<ExamineTextTime, Dimension> dimMap = new HashMap<>();
 
 	public ExamineTooltipOverlay()
 	{
@@ -103,6 +103,7 @@ public class ExamineTooltipOverlay extends Overlay
 	private void renderAsRS3(ExamineTextTime examine, Graphics2D graphics)
 	{
 		ExamineType type = examine.getType();
+		boolean foundObject = false;
 		int x = 0, y = 0;
 		switch (type)
 		{
@@ -115,11 +116,15 @@ public class ExamineTooltipOverlay extends Overlay
 						npc.getModel(),
 						npc.getOrientation(),
 						npc.getLocalLocation());
-					Rectangle box = shape.getBounds();
-					if (box != null)
+					if (shape != null)
 					{
-						x = box.x;
-						y = box.y;
+						Rectangle box = shape.getBounds();
+						if (box != null)
+						{
+							x = box.x;
+							y = box.height + box.y;
+							foundObject = true;
+						}
 					}
 				}
 				break;
@@ -140,6 +145,7 @@ public class ExamineTooltipOverlay extends Overlay
 						{
 							x = slotBounds.x;
 							y = slotBounds.height + slotBounds.y;
+							foundObject = true;
 						}
 					}
 				}
@@ -151,6 +157,7 @@ public class ExamineTooltipOverlay extends Overlay
 				{
 					x = bounds.x;
 					y = bounds.height + bounds.y;
+					foundObject = true;
 				}
 				break;
 
@@ -165,88 +172,13 @@ public class ExamineTooltipOverlay extends Overlay
 
 				if (tile != null)
 				{
-					Shape shape = null;
-					if (type == ExamineType.ITEM_GROUND)
+					Shape shape = getObjectShapeFromTile(tile, point, type, id);
+					if (shape == null)
 					{
-						List<TileItem> groundItemsList = tile.getGroundItems();
-						if (groundItemsList != null)
+						Tile bridge = tile.getBridge();
+						if (bridge != null)
 						{
-							for (TileItem item : groundItemsList)
-							{
-								if (item != null && item.getId() == id)
-								{
-									shape = Perspective.getClickbox(client,
-										item.getModel(), 0, point);
-									if (shape != null)
-									{
-										break;
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						GameObject[] gameObjects = tile.getGameObjects();
-						if (gameObjects != null)
-						{
-							for (GameObject object : gameObjects)
-							{
-								if (object != null)
-								{
-									int objId = object.getId();
-									ObjectComposition comp = client.getObjectDefinition(objId);
-									if (comp != null)
-									{
-										try
-										{
-											ObjectComposition impostor = comp.getImpostor();
-											if (impostor != null)
-											{
-												objId = impostor.getId();
-											}
-										}
-										catch (Exception e)
-										{
-
-										}
-									}
-									if (objId == id)
-									{
-										shape = object.getConvexHull();
-										if (shape != null)
-										{
-											break;
-										}
-									}
-								}
-							}
-						}
-
-						if (shape == null)
-						{
-							DecorativeObject object = tile.getDecorativeObject();
-							if (object != null && object.getId() == id)
-							{
-								shape = object.getConvexHull();
-								if (shape != null)
-								{
-									break;
-								}
-							}
-						}
-
-						if (shape == null)
-						{
-							WallObject object = tile.getWallObject();
-							if (object != null && object.getId() == id)
-							{
-								shape = object.getConvexHull();
-								if (shape != null)
-								{
-									break;
-								}
-							}
+							shape = getObjectShapeFromTile(bridge, point, type, id);
 						}
 					}
 
@@ -256,9 +188,20 @@ public class ExamineTooltipOverlay extends Overlay
 						if (box != null)
 						{
 							x = box.x;
-							y = box.y;
+							y = box.height + box.y;
 						}
 					}
+					// Fallback to tile
+					else
+					{
+						net.runelite.api.Point p = Perspective.localToCanvas(client, point, client.getPlane(), -50);
+						if (p != null)
+						{
+							x = p.getX();
+							y = p.getY();
+						}
+					}
+					foundObject = true;
 				}
 
 				break;
@@ -267,6 +210,12 @@ public class ExamineTooltipOverlay extends Overlay
 				return;
 		}
 
+		// Give up and render as tooltip if target not found
+		if (!foundObject)
+		{
+			renderAsTooltip(examine);
+			return;
+		}
 
 		final TooltipComponent tooltipComponent = new TooltipComponent();
 		tooltipComponent.setText(getWrappedText(examine.getText()));
@@ -345,30 +294,15 @@ public class ExamineTooltipOverlay extends Overlay
 			return null;
 		}
 
-		if (WidgetInfo.EQUIPMENT.getGroupId() == widgetGroup)
+		Widget widgetItem = null;
+		if (WidgetInfo.EQUIPMENT.getGroupId() == widgetGroup
+			|| widgetGroup == 84)
 		{
-			Widget widgetItem = widget.getChild(1);
-			if (widgetItem != null)
-			{
-				return widgetItem.getBounds();
-			}
+			widgetItem = widget.getChild(1);
 		}
 		else if (WidgetInfo.SMITHING_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup)
 		{
-			Widget widgetItem = widget.getChild(2);
-			if (widgetItem != null)
-			{
-				return widgetItem.getBounds();
-			}
-		}
-		else if (WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup
-			|| WidgetInfo.RUNE_POUCH_ITEM_CONTAINER.getGroupId() == widgetGroup)
-		{
-			Widget widgetItem = widget.getChild(actionParam);
-			if (widgetItem != null)
-			{
-				return widgetItem.getBounds();
-			}
+			widgetItem = widget.getChild(2);
 		}
 		else if (WidgetInfo.BANK_ITEM_CONTAINER.getGroupId() == widgetGroup
 			|| WidgetInfo.CLUE_SCROLL_REWARD_ITEM_CONTAINER.getGroupId() == widgetGroup
@@ -377,31 +311,113 @@ public class ExamineTooltipOverlay extends Overlay
 			|| WidgetID.SEED_BOX_GROUP_ID == widgetGroup
 			|| WidgetID.PLAYER_TRADE_SCREEN_GROUP_ID == widgetGroup
 			|| WidgetID.PLAYER_TRADE_INVENTORY_GROUP_ID == widgetGroup
-			|| WidgetID.SHOP_INVENTORY_GROUP_ID == widgetGroup)
+			|| WidgetID.SHOP_INVENTORY_GROUP_ID == widgetGroup
+			|| WidgetID.GUIDE_PRICE_GROUP_ID == widgetGroup
+			|| WidgetID.EQUIPMENT_INVENTORY_GROUP_ID == widgetGroup
+			|| WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup
+			|| WidgetInfo.RUNE_POUCH_ITEM_CONTAINER.getGroupId() == widgetGroup
+			|| WidgetInfo.SHOP_ITEMS_CONTAINER.getGroupId() == widgetGroup)
 		{
-			Widget widgetItem = widget.getChild(actionParam);
-			if (widgetItem != null)
-			{
-				return widgetItem.getBounds();
-			}
-		}
-		else if (WidgetInfo.SHOP_ITEMS_CONTAINER.getGroupId() == widgetGroup)
-		{
-			Widget widgetItem = widget.getChild(actionParam);
-			if (widgetItem != null)
-			{
-				return widgetItem.getBounds();
-			}
+			widgetItem = widget.getChild(actionParam);
 		}
 		else if (WidgetID.SEED_VAULT_GROUP_ID == widgetGroup)
 		{
-			Widget widgetItem = client.getWidget(SEED_VAULT_ITEM_CONTAINER).getChild(actionParam);
-			if (widgetItem != null)
+			Widget seedWidget = client.getWidget(SEED_VAULT_ITEM_CONTAINER);
+			if (seedWidget != null)
 			{
-				return widgetItem.getBounds();
+				widgetItem = seedWidget.getChild(actionParam);
 			}
 		}
 
-		return null;
+		if (widgetItem != null)
+		{
+			return widgetItem.getBounds();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	private Shape getObjectShapeFromTile(Tile tile, LocalPoint point, ExamineType type, int id)
+	{
+		Shape shape = null;
+		if (type == ExamineType.ITEM_GROUND)
+		{
+			List<TileItem> groundItemsList = tile.getGroundItems();
+			if (groundItemsList != null)
+			{
+				for (TileItem item : groundItemsList)
+				{
+					if (item != null && item.getId() == id)
+					{
+						shape = Perspective.getClickbox(client,
+							item.getModel(), 0, point);
+						if (shape != null)
+						{
+							break;
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			GameObject[] gameObjects = tile.getGameObjects();
+			if (gameObjects != null)
+			{
+				for (GameObject object : gameObjects)
+				{
+					if (object != null)
+					{
+						int objId = object.getId();
+						ObjectComposition comp = client.getObjectDefinition(objId);
+						if (comp != null)
+						{
+							try
+							{
+								ObjectComposition impostor = comp.getImpostor();
+								if (impostor != null)
+								{
+									objId = impostor.getId();
+								}
+							}
+							catch (Exception e)
+							{
+								// Ignore
+							}
+						}
+						if (objId == id)
+						{
+							shape = object.getConvexHull();
+							if (shape != null)
+							{
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			if (shape == null)
+			{
+				DecorativeObject object = tile.getDecorativeObject();
+				if (object != null && object.getId() == id)
+				{
+					shape = object.getConvexHull();
+				}
+			}
+
+			if (shape == null)
+			{
+				WallObject object = tile.getWallObject();
+				if (object != null && object.getId() == id)
+				{
+					shape = object.getConvexHull();
+				}
+			}
+		}
+
+		return shape;
 	}
 }
