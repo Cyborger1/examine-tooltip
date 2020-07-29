@@ -8,7 +8,9 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import net.runelite.api.Client;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
@@ -29,6 +31,8 @@ import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.config.RuneLiteConfig;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
+import net.runelite.client.ui.overlay.OverlayPosition;
+import net.runelite.client.ui.overlay.OverlayPriority;
 import net.runelite.client.ui.overlay.components.TooltipComponent;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
@@ -36,6 +40,8 @@ import org.apache.commons.text.WordUtils;
 
 public class ExamineTooltipOverlay extends Overlay
 {
+	private static int PADDING = 5;
+
 	@Inject
 	private TooltipManager tooltipManager;
 
@@ -51,17 +57,18 @@ public class ExamineTooltipOverlay extends Overlay
 	@Inject
 	private Client client;
 
+	private Map<ExamineTextTime, Dimension> dimMap = new HashMap<>();
+
 	public ExamineTooltipOverlay()
 	{
-		super();
-		this.setLayer(OverlayLayer.ALWAYS_ON_TOP);
+		setPosition(OverlayPosition.TOOLTIP);
+		setPriority(OverlayPriority.HIGHEST);
+		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 	}
 
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-
-
 		Instant now = Instant.now();
 		Duration timeout = Duration.ofSeconds(config.tooltipTimeout());
 
@@ -78,6 +85,10 @@ public class ExamineTooltipOverlay extends Overlay
 				{
 					renderAsRS3(examine, graphics);
 				}
+			}
+			else
+			{
+				dimMap.remove(examine);
 			}
 		}
 
@@ -139,7 +150,7 @@ public class ExamineTooltipOverlay extends Overlay
 				if (bounds != null)
 				{
 					x = bounds.x;
-					y = bounds.y;
+					y = bounds.height + bounds.y;
 				}
 				break;
 
@@ -260,8 +271,54 @@ public class ExamineTooltipOverlay extends Overlay
 		final TooltipComponent tooltipComponent = new TooltipComponent();
 		tooltipComponent.setText(getWrappedText(examine.getText()));
 		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
+		tooltipComponent.setModIcons(client.getModIcons());
+
+		Dimension dim = dimMap.get(examine);
+		if (dim != null)
+		{
+			int xMin, xMax, yMin, yMax;
+
+			if (type == ExamineType.ITEM || type == ExamineType.ITEM_INTERFACE)
+			{
+				xMin = 0;
+				xMax = client.getCanvas().getSize().width;
+				yMin = 0;
+				yMax = client.getCanvas().getSize().height;
+			}
+			else
+			{
+				xMin = client.getViewportXOffset();
+				xMax = client.getViewportWidth() + xMin;
+				yMin = client.getViewportYOffset();
+				yMax = client.getViewportHeight() + yMin;
+			}
+
+			xMin += PADDING;
+			xMax -= PADDING;
+			yMin += PADDING;
+			yMax -= PADDING;
+
+			if (x < xMin)
+			{
+				x = xMin;
+			}
+			else if (x + dim.width > xMax)
+			{
+				x = xMax - dim.width;
+			}
+
+			if (y < yMin)
+			{
+				y = yMin;
+			}
+			else if (y + dim.height > yMax)
+			{
+				y = yMax - dim.height;
+			}
+		}
+
 		tooltipComponent.setPreferredLocation(new Point(x, y));
-		tooltipComponent.render(graphics);
+		dimMap.put(examine, tooltipComponent.render(graphics));
 	}
 
 	private String getWrappedText(String text)
