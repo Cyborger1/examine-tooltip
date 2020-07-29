@@ -1,13 +1,16 @@
 package com.examinetooltip;
 
 import java.time.Instant;
-import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Builder
-@Value
+@Data
 public class ExamineTextTime
 {
-	String text;
-	Instant time;
+	private ExamineType type;
+	private int id;
+	private int widgetId;
+	private int actionParam;
+
+	private String text;
+	private Instant time;
 }

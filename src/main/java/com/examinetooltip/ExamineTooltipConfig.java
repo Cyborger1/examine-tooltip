@@ -38,10 +38,22 @@ public interface ExamineTooltipConfig extends Config
 	String ITEM_EXAMINES_KEY_NAME = "showItemExamines";
 
 	@ConfigItem(
+		keyName = "rs3Style",
+		name = "RS3 style examine box",
+		description = "Show examines as a hovering box under the examined items, else show as cursor tooltip",
+		position = 1
+	)
+
+	default boolean rs3Style()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = ITEM_EXAMINES_KEY_NAME,
 		name = "Show item examines",
 		description = "Show text from examining items",
-		position = 1
+		position = 2
 	)
 
 	default boolean showItemExamines()
@@ -52,19 +64,19 @@ public interface ExamineTooltipConfig extends Config
 	@ConfigItem(
 		keyName = "showPriceCheck",
 		name = "Show price check",
-		description = "If showing item examines, also show the price check text from the Examine Plugin (\"Price of ...\")",
-		position = 2
+		description = "Show the price check text from the Examine Plugin (\"Price of ...\"), always shown as cursor tooltip",
+		position = 3
 	)
 	default boolean showPriceCheck()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
 		keyName = "showObjectExamines",
 		name = "Show object examines",
 		description = "Show text from examining objects (e.g. scenery)",
-		position = 3
+		position = 4
 	)
 	default boolean showObjectExamines()
 	{
@@ -75,7 +87,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showNPCExamines",
 		name = "Show NPC examines",
 		description = "Show text from examining NPCs",
-		position = 4
+		position = 5
 	)
 	default boolean showNPCExamines()
 	{
@@ -86,7 +98,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "tooltipTimeout",
 		name = "Tooltip timeout",
 		description = "How long to show the examine tooltip",
-		position = 5
+		position = 6
 	)
 	@Units(Units.SECONDS)
 	@Range(min = 1, max = 10)
@@ -99,7 +111,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltip",
 		name = "Wrap tooltip",
 		description = "Wraps the text in the tooltip if it gets too long",
-		position = 6
+		position = 7
 	)
 	default boolean wrapTooltip()
 	{
@@ -110,7 +122,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltipColumns",
 		name = "Wrap columns",
 		description = "How many text columns (or characters) before wrapping the text",
-		position = 7
+		position = 8
 	)
 	@Range(
 		min = 20

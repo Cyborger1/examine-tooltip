@@ -28,17 +28,16 @@ package com.examinetooltip;
 import com.google.common.collect.EvictingQueue;
 import com.google.inject.Provides;
 import java.time.Instant;
+import java.util.ArrayDeque;
+import java.util.Queue;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
-import net.runelite.api.ChatMessageType;
-import net.runelite.api.MenuAction;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -47,7 +46,7 @@ import net.runelite.client.util.Text;
 @Slf4j
 @PluginDescriptor(
 	name = "Examine Tooltip",
-	description = "Adds a tooltip under the cursor when examining things",
+	description = "Adds tooltips on screen when examining things",
 	tags = {"examine", "tooltip", "text"}
 )
 public class ExamineTooltipPlugin extends Plugin
@@ -62,9 +61,9 @@ public class ExamineTooltipPlugin extends Plugin
 	private ExamineTooltipConfig config;
 
 	@Getter
-	private EvictingQueue<ExamineTextTime> examines = EvictingQueue.create(5);
+	private final EvictingQueue<ExamineTextTime> examines = EvictingQueue.create(5);
 
-	private int pendingGMExamines;
+	private final Queue<ExamineTextTime> pendingExamines = new ArrayDeque<>();
 
 	@Provides
 	ExamineTooltipConfig provideConfig(ConfigManager configManager)
@@ -77,7 +76,7 @@ public class ExamineTooltipPlugin extends Plugin
 	{
 		overlayManager.add(examineTooltipOverlay);
 		examines.clear();
-		pendingGMExamines = 0;
+		pendingExamines.clear();
 	}
 
 	@Override
@@ -85,78 +84,138 @@ public class ExamineTooltipPlugin extends Plugin
 	{
 		overlayManager.remove(examineTooltipOverlay);
 		examines.clear();
-		pendingGMExamines = 0;
-	}
-
-	@Subscribe
-	public void onConfigChanged(ConfigChanged event)
-	{
-		if (event.getGroup().equals(ExamineTooltipConfig.CONFIG_GROUP)
-			&& event.getKey().equals(ExamineTooltipConfig.ITEM_EXAMINES_KEY_NAME))
-		{
-			pendingGMExamines = 0;
-		}
+		pendingExamines.clear();
 	}
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged event)
 	{
-		pendingGMExamines = 0;
+		pendingExamines.clear();
 	}
 
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
-		if (!config.showItemExamines())
+		if (!Text.removeTags(event.getMenuOption()).equals("Examine"))
 		{
 			return;
 		}
 
-		if (Text.removeTags(event.getMenuOption()).equals("Examine")
-			&& event.getMenuAction() == MenuAction.CC_OP_LOW_PRIORITY)
+		ExamineType type;
+		int id = event.getId();
+		int actionParam = event.getActionParam();
+		int wId = event.getWidgetId();
+		switch (event.getMenuAction())
 		{
-			synchronized (this)
-			{
-				pendingGMExamines++;
-			}
+			case EXAMINE_ITEM:
+				if (!config.showItemExamines())
+				{
+					return;
+				}
+				type = ExamineType.ITEM;
+				break;
+			case EXAMINE_ITEM_GROUND:
+				if (!config.showItemExamines())
+				{
+					return;
+				}
+				type = ExamineType.ITEM_GROUND;
+				break;
+			case CC_OP_LOW_PRIORITY:
+				if (!config.showItemExamines())
+				{
+					return;
+				}
+				type = ExamineType.ITEM_INTERFACE;
+				break;
+			case EXAMINE_OBJECT:
+				if (!config.showObjectExamines())
+				{
+					return;
+				}
+				type = ExamineType.OBJECT;
+				break;
+			case EXAMINE_NPC:
+				if (!config.showNPCExamines())
+				{
+					return;
+				}
+				type = ExamineType.NPC;
+				break;
+			default:
+				return;
 		}
+
+		ExamineTextTime examine = new ExamineTextTime();
+		examine.setType(type);
+		examine.setId(id);
+		examine.setWidgetId(wId);
+		examine.setActionParam(actionParam);
+		pendingExamines.offer(examine);
 	}
 
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
-		ChatMessageType type = event.getType();
-		if ((config.showItemExamines() && (type == ChatMessageType.ITEM_EXAMINE || type == ChatMessageType.GAMEMESSAGE))
-			|| (config.showObjectExamines() && type == ChatMessageType.OBJECT_EXAMINE)
-			|| (config.showNPCExamines() && type == ChatMessageType.NPC_EXAMINE))
+		ExamineType type;
+		switch (event.getType())
 		{
-			if (type == ChatMessageType.GAMEMESSAGE)
-			{
-				synchronized (this)
+			case ITEM_EXAMINE:
+				if (Text.removeTags(event.getMessage()).startsWith("Price of"))
 				{
-					if (pendingGMExamines > 0)
-					{
-						pendingGMExamines--;
-					}
-					else
-					{
-						return;
-					}
-
+					type = ExamineType.PRICE_CHECK;
 				}
-			}
-
-			String text = Text.removeTags(event.getMessage());
-
-			if (!config.showPriceCheck() && type == ChatMessageType.ITEM_EXAMINE && text.startsWith("Price of"))
-			{
+				else
+				{
+					type = ExamineType.ITEM;
+				}
+				break;
+			case OBJECT_EXAMINE:
+				type = ExamineType.OBJECT;
+				break;
+			case NPC_EXAMINE:
+				type = ExamineType.NPC;
+				break;
+			case GAMEMESSAGE:
+				type = ExamineType.ITEM_INTERFACE;
+				break;
+			default:
 				return;
-			}
+		}
 
-			examines.removeIf(e -> e.getText().equals(text));
-			examines.add(ExamineTextTime.builder()
-				.text(text)
-				.time(Instant.now()).build());
+		Instant now = Instant.now();
+		String text = Text.removeTags(event.getMessage());
+
+		if (type == ExamineType.PRICE_CHECK)
+		{
+			if (config.showPriceCheck())
+			{
+				ExamineTextTime examine = new ExamineTextTime();
+				examine.setType(type);
+				examine.setText(text);
+				examine.setTime(now);
+				examines.add(examine);
+			}
+			return;
+		}
+
+		if (pendingExamines.isEmpty())
+		{
+			return;
+		}
+
+		ExamineTextTime pending = pendingExamines.poll();
+
+		if (pending.getType() == type || (type == ExamineType.ITEM && pending.getType() == ExamineType.ITEM_GROUND))
+		{
+			pending.setTime(now);
+			pending.setText(text);
+			examines.removeIf(x -> x.getText().equals(text));
+			examines.add(pending);
+		}
+		else
+		{
+			pendingExamines.clear();
 		}
 	}
 }
