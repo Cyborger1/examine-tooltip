@@ -13,6 +13,7 @@ import net.runelite.api.Client;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.NPC;
+import net.runelite.api.ObjectComposition;
 import net.runelite.api.Perspective;
 import net.runelite.api.Tile;
 import net.runelite.api.TileItem;
@@ -180,12 +181,32 @@ public class ExamineTooltipOverlay extends Overlay
 						{
 							for (GameObject object : gameObjects)
 							{
-								if (object != null && object.getId() == examine.getId())
+								if (object != null)
 								{
-									shape = object.getConvexHull();
-									if (shape != null)
+									int objId = object.getId();
+									ObjectComposition comp = client.getObjectDefinition(objId);
+									if (comp != null)
 									{
-										break;
+										try
+										{
+											ObjectComposition impostor = comp.getImpostor();
+											if (impostor != null)
+											{
+												objId = impostor.getId();
+											}
+										}
+										catch (Exception e)
+										{
+
+										}
+									}
+									if (objId == id)
+									{
+										shape = object.getConvexHull();
+										if (shape != null)
+										{
+											break;
+										}
 									}
 								}
 							}
@@ -298,7 +319,8 @@ public class ExamineTooltipOverlay extends Overlay
 			|| WidgetID.SEED_VAULT_INVENTORY_GROUP_ID == widgetGroup
 			|| WidgetID.SEED_BOX_GROUP_ID == widgetGroup
 			|| WidgetID.PLAYER_TRADE_SCREEN_GROUP_ID == widgetGroup
-			|| WidgetID.PLAYER_TRADE_INVENTORY_GROUP_ID == widgetGroup)
+			|| WidgetID.PLAYER_TRADE_INVENTORY_GROUP_ID == widgetGroup
+			|| WidgetID.SHOP_INVENTORY_GROUP_ID == widgetGroup)
 		{
 			Widget widgetItem = widget.getChild(actionParam);
 			if (widgetItem != null)

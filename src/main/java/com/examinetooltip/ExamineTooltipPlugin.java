@@ -33,7 +33,6 @@ import java.util.Queue;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
-import net.runelite.api.ChatMessageType;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuOptionClicked;
@@ -207,15 +206,16 @@ public class ExamineTooltipPlugin extends Plugin
 
 		ExamineTextTime pending = pendingExamines.poll();
 
-		if (pending.getType() != type)
+		if (pending.getType() == type || (type == ExamineType.ITEM && pending.getType() == ExamineType.ITEM_GROUND))
+		{
+			pending.setTime(now);
+			pending.setText(text);
+			examines.removeIf(x -> x.getText().equals(text));
+			examines.add(pending);
+		}
+		else
 		{
 			pendingExamines.clear();
-			return;
 		}
-
-		pending.setTime(now);
-		pending.setText(text);
-		examines.removeIf(x -> x.getText().equals(text));
-		examines.add(pending);
 	}
 }
