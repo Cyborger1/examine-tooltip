@@ -3,9 +3,32 @@ package com.examinetooltip;
 import com.google.inject.Inject;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import net.runelite.api.Client;
+import net.runelite.api.DecorativeObject;
+import net.runelite.api.GameObject;
+import net.runelite.api.NPC;
+import net.runelite.api.Perspective;
+import net.runelite.api.Tile;
+import net.runelite.api.TileItem;
+import net.runelite.api.WallObject;
+import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetID;
+import net.runelite.api.widgets.WidgetInfo;
+import static net.runelite.api.widgets.WidgetInfo.SEED_VAULT_ITEM_CONTAINER;
+import static net.runelite.api.widgets.WidgetInfo.TO_CHILD;
+import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
+import net.runelite.api.widgets.WidgetItem;
+import net.runelite.client.config.RuneLiteConfig;
 import net.runelite.client.ui.overlay.Overlay;
+import net.runelite.client.ui.overlay.OverlayLayer;
+import net.runelite.client.ui.overlay.components.TooltipComponent;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
 import org.apache.commons.text.WordUtils;
@@ -21,9 +44,23 @@ public class ExamineTooltipOverlay extends Overlay
 	@Inject
 	private ExamineTooltipPlugin plugin;
 
+	@Inject
+	private RuneLiteConfig runeLiteConfig;
+
+	@Inject
+	private Client client;
+
+	public ExamineTooltipOverlay()
+	{
+		super();
+		this.setLayer(OverlayLayer.ALWAYS_ON_TOP);
+	}
+
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
+
+
 		Instant now = Instant.now();
 		Duration timeout = Duration.ofSeconds(config.tooltipTimeout());
 
@@ -32,12 +69,257 @@ public class ExamineTooltipOverlay extends Overlay
 			Duration since = Duration.between(examine.getTime(), now);
 			if (since.compareTo(timeout) < 0)
 			{
-				String text = examine.getText();
-				if (config.wrapTooltip())
+				if (!config.rs3Style() || examine.getType() == ExamineType.PRICE_CHECK)
 				{
-					text = WordUtils.wrap(text, config.wrapTooltipColumns(), "</br>", false);
+					renderAsTooltip(examine);
 				}
-				tooltipManager.add(new Tooltip(text));
+				else
+				{
+					renderAsRS3(examine, graphics);
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private void renderAsTooltip(ExamineTextTime examine)
+	{
+		tooltipManager.add(new Tooltip(getWrappedText(examine.getText())));
+	}
+
+	private void renderAsRS3(ExamineTextTime examine, Graphics2D graphics)
+	{
+		ExamineType type = examine.getType();
+		int x = 0, y = 0;
+		switch (type)
+		{
+			case NPC:
+				final NPC[] cachedNPCs = client.getCachedNPCs();
+				final NPC npc = cachedNPCs[examine.getId()];
+				if (npc != null)
+				{
+					Shape shape = Perspective.getClickbox(client,
+						npc.getModel(),
+						npc.getOrientation(),
+						npc.getLocalLocation());
+					Rectangle box = shape.getBounds();
+					if (box != null)
+					{
+						x = box.x;
+						y = box.y;
+					}
+				}
+				break;
+
+			case ITEM:
+				int wId = examine.getWidgetId();
+				int widgetGroup = TO_GROUP(wId);
+				int widgetChild = TO_CHILD(wId);
+
+				Widget widget = client.getWidget(widgetGroup, widgetChild);
+				if (widget != null)
+				{
+					WidgetItem widgetItem = widget.getWidgetItem(examine.getActionParam());
+					if (widgetItem != null)
+					{
+						Rectangle slotBounds = widgetItem.getCanvasBounds();
+						if (slotBounds != null)
+						{
+							x = slotBounds.x;
+							y = slotBounds.height + slotBounds.y;
+						}
+					}
+				}
+				break;
+
+			case ITEM_INTERFACE:
+				Rectangle bounds = findWidgetBounds(examine.getWidgetId(), examine.getActionParam());
+				if (bounds != null)
+				{
+					x = bounds.x;
+					y = bounds.y;
+				}
+				break;
+
+			case ITEM_GROUND:
+			case OBJECT:
+				// Yes, for these, ActionParam and WidgetID are scene coordinates
+				LocalPoint point = LocalPoint.fromScene(examine.getActionParam(), examine.getWidgetId());
+				int id = examine.getId();
+
+				Tile tile = client.getScene().getTiles()
+					[client.getPlane()][point.getSceneX()][point.getSceneY()];
+
+				if (tile != null)
+				{
+					Shape shape = null;
+					if (type == ExamineType.ITEM_GROUND)
+					{
+						List<TileItem> groundItemsList = tile.getGroundItems();
+						if (groundItemsList != null)
+						{
+							for (TileItem item : groundItemsList)
+							{
+								if (item != null && item.getId() == id)
+								{
+									shape = Perspective.getClickbox(client,
+										item.getModel(), 0, point);
+									if (shape != null)
+									{
+										break;
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						GameObject[] gameObjects = tile.getGameObjects();
+						if (gameObjects != null)
+						{
+							for (GameObject object : gameObjects)
+							{
+								if (object != null && object.getId() == examine.getId())
+								{
+									shape = object.getConvexHull();
+									if (shape != null)
+									{
+										break;
+									}
+								}
+							}
+						}
+
+						if (shape == null)
+						{
+							DecorativeObject object = tile.getDecorativeObject();
+							if (object != null && object.getId() == id)
+							{
+								shape = object.getConvexHull();
+								if (shape != null)
+								{
+									break;
+								}
+							}
+						}
+
+						if (shape == null)
+						{
+							WallObject object = tile.getWallObject();
+							if (object != null && object.getId() == id)
+							{
+								shape = object.getConvexHull();
+								if (shape != null)
+								{
+									break;
+								}
+							}
+						}
+					}
+
+					if (shape != null)
+					{
+						Rectangle box = shape.getBounds();
+						if (box != null)
+						{
+							x = box.x;
+							y = box.y;
+						}
+					}
+				}
+
+				break;
+
+			default:
+				return;
+		}
+
+
+		final TooltipComponent tooltipComponent = new TooltipComponent();
+		tooltipComponent.setText(getWrappedText(examine.getText()));
+		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
+		tooltipComponent.setPreferredLocation(new Point(x, y));
+		tooltipComponent.render(graphics);
+	}
+
+	private String getWrappedText(String text)
+	{
+		if (config.wrapTooltip())
+		{
+			return WordUtils.wrap(text, config.wrapTooltipColumns(), "</br>", false);
+		}
+		else
+		{
+			return text;
+		}
+	}
+
+	// Modified from findItemFromWidget in ExaminePlugin.java in Runelite's Repo
+	private Rectangle findWidgetBounds(int widgetId, int actionParam)
+	{
+		int widgetGroup = TO_GROUP(widgetId);
+		int widgetChild = TO_CHILD(widgetId);
+		Widget widget = client.getWidget(widgetGroup, widgetChild);
+
+		if (widget == null)
+		{
+			return null;
+		}
+
+		if (WidgetInfo.EQUIPMENT.getGroupId() == widgetGroup)
+		{
+			Widget widgetItem = widget.getChild(1);
+			if (widgetItem != null)
+			{
+				return widgetItem.getBounds();
+			}
+		}
+		else if (WidgetInfo.SMITHING_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup)
+		{
+			Widget widgetItem = widget.getChild(2);
+			if (widgetItem != null)
+			{
+				return widgetItem.getBounds();
+			}
+		}
+		else if (WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup
+			|| WidgetInfo.RUNE_POUCH_ITEM_CONTAINER.getGroupId() == widgetGroup)
+		{
+			Widget widgetItem = widget.getChild(actionParam);
+			if (widgetItem != null)
+			{
+				return widgetItem.getBounds();
+			}
+		}
+		else if (WidgetInfo.BANK_ITEM_CONTAINER.getGroupId() == widgetGroup
+			|| WidgetInfo.CLUE_SCROLL_REWARD_ITEM_CONTAINER.getGroupId() == widgetGroup
+			|| WidgetInfo.LOOTING_BAG_CONTAINER.getGroupId() == widgetGroup
+			|| WidgetID.SEED_VAULT_INVENTORY_GROUP_ID == widgetGroup
+			|| WidgetID.SEED_BOX_GROUP_ID == widgetGroup
+			|| WidgetID.PLAYER_TRADE_SCREEN_GROUP_ID == widgetGroup
+			|| WidgetID.PLAYER_TRADE_INVENTORY_GROUP_ID == widgetGroup)
+		{
+			Widget widgetItem = widget.getChild(actionParam);
+			if (widgetItem != null)
+			{
+				return widgetItem.getBounds();
+			}
+		}
+		else if (WidgetInfo.SHOP_ITEMS_CONTAINER.getGroupId() == widgetGroup)
+		{
+			Widget widgetItem = widget.getChild(actionParam);
+			if (widgetItem != null)
+			{
+				return widgetItem.getBounds();
+			}
+		}
+		else if (WidgetID.SEED_VAULT_GROUP_ID == widgetGroup)
+		{
+			Widget widgetItem = client.getWidget(SEED_VAULT_ITEM_CONTAINER).getChild(actionParam);
+			if (widgetItem != null)
+			{
+				return widgetItem.getBounds();
 			}
 		}
 
