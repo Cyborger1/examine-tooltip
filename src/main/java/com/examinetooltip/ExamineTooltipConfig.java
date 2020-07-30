@@ -104,14 +104,27 @@ public interface ExamineTooltipConfig extends Config
 	@Range(min = 1, max = 10)
 	default int tooltipTimeout()
 	{
-		return 3;
+		return 4;
+	}
+
+	@ConfigItem(
+		keyName = "tooltipFadeout",
+		name = "Tooltip fadeout",
+		description = "Start fading out the tooltip X milliseconds before it disappears, 0 means no fadeout",
+		position = 7
+	)
+	@Units(Units.MILLISECONDS)
+	@Range(min = 0, max = 3000)
+	default int tooltipFadeout()
+	{
+		return 1000;
 	}
 
 	@ConfigItem(
 		keyName = "wrapTooltip",
 		name = "Wrap tooltip",
 		description = "Wraps the text in the tooltip if it gets too long",
-		position = 7
+		position = 8
 	)
 	default boolean wrapTooltip()
 	{
@@ -122,7 +135,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltipColumns",
 		name = "Wrap columns",
 		description = "How many text columns (or characters) before wrapping the text",
-		position = 8
+		position = 9
 	)
 	@Range(
 		min = 20

@@ -1,5 +1,6 @@
 package com.examinetooltip;
 
+import com.examinetooltip.components.AlphaTooltipComponent;
 import com.google.inject.Inject;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -33,7 +34,6 @@ import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayPriority;
-import net.runelite.client.ui.overlay.components.TooltipComponent;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
 import org.apache.commons.text.WordUtils;
@@ -78,13 +78,25 @@ public class ExamineTooltipOverlay extends Overlay
 			Duration since = Duration.between(examine.getTime(), now);
 			if (since.compareTo(timeout) < 0)
 			{
-				if (!config.rs3Style() || examine.getType() == ExamineType.PRICE_CHECK)
+				long timeLeft = (timeout.minus(since)).toMillis();
+				int fadeout = config.tooltipFadeout();
+				double alpha;
+				if (timeLeft < fadeout && fadeout > 0)
 				{
-					renderAsTooltip(examine);
+					alpha = Math.min(1.0, timeLeft / (double) fadeout);
 				}
 				else
 				{
-					renderAsRS3(examine, graphics);
+					alpha = 1.0;
+				}
+
+				if (!config.rs3Style() || examine.getType() == ExamineType.PRICE_CHECK)
+				{
+					renderAsTooltip(examine, alpha);
+				}
+				else
+				{
+					renderAsRS3(examine, graphics, alpha);
 					shouldClearDimMap = false;
 				}
 			}
@@ -98,12 +110,17 @@ public class ExamineTooltipOverlay extends Overlay
 		return null;
 	}
 
-	private void renderAsTooltip(ExamineTextTime examine)
+	private void renderAsTooltip(ExamineTextTime examine, double alphaModifier)
 	{
-		tooltipManager.add(new Tooltip(getWrappedText(examine.getText())));
+		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
+		tooltipComponent.setText(getWrappedText(examine.getText()));
+		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
+		tooltipComponent.setModIcons(client.getModIcons());
+		tooltipComponent.setAlphaModifier(alphaModifier);
+		tooltipManager.add(new Tooltip(tooltipComponent));
 	}
 
-	private void renderAsRS3(ExamineTextTime examine, Graphics2D graphics)
+	private void renderAsRS3(ExamineTextTime examine, Graphics2D graphics, double alphaModifier)
 	{
 		ExamineType type = examine.getType();
 		boolean foundObject = false;
@@ -216,12 +233,13 @@ public class ExamineTooltipOverlay extends Overlay
 		// Give up and render as tooltip if target not found
 		if (!foundObject)
 		{
-			renderAsTooltip(examine);
+			renderAsTooltip(examine, alphaModifier);
 			return;
 		}
 
-		final TooltipComponent tooltipComponent = new TooltipComponent();
+		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
 		tooltipComponent.setText(getWrappedText(examine.getText()));
+		tooltipComponent.setAlphaModifier(alphaModifier);
 		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
 		tooltipComponent.setModIcons(client.getModIcons());
 

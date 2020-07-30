@@ -23,19 +23,35 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.examinetooltip;
+package com.examinetooltip.util;
 
-import java.time.Instant;
-import lombok.Data;
+import java.awt.Color;
 
-@Data
-public class ExamineTextTime
+public class AlphaUtil
 {
-	private ExamineType type;
-	private int id;
-	private int widgetId;
-	private int actionParam;
+	/**
+	 * Applies the given alpha modifier to the transparency of the given color.
+	 * @param color The color to get the alpha modified version of.
+	 * @param alphaModifier The alpha modifier.
+	 * @return The alpha modified color or the passed Color object if alphaModifier == 1.0.
+	 */
+	public static Color getAlphaModdedColor(Color color, double alphaModifier)
+	{
+		if (alphaModifier == 1.0)
+		{
+			return color;
+		}
+		else
+		{
+			int newAlpha = (int) (color.getAlpha() * alphaModifier);
+			// Clamp value to 0 - 255
+			newAlpha = Math.max(0, Math.min(newAlpha, 255));
 
-	private String text;
-	private Instant time;
+			return new Color(
+				color.getRed(),
+				color.getGreen(),
+				color.getBlue(),
+				newAlpha);
+		}
+	}
 }
