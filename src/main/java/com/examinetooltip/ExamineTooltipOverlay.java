@@ -296,6 +296,8 @@ public class ExamineTooltipOverlay extends Overlay
 
 		Widget widgetItem = null;
 		if (WidgetInfo.EQUIPMENT.getGroupId() == widgetGroup
+			|| (WidgetInfo.BANK_EQUIPMENT_CONTAINER.getGroupId() == widgetGroup
+				&& widgetChild >= 75 && widgetChild <= 85)
 			|| widgetGroup == 84)
 		{
 			widgetItem = widget.getChild(1);
