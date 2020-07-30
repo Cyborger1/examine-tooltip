@@ -90,6 +90,7 @@ public class ExamineTooltipPlugin extends Plugin
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged event)
 	{
+		examines.clear();
 		pendingExamines.clear();
 	}
 
