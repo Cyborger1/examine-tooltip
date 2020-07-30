@@ -71,6 +71,7 @@ public class ExamineTooltipOverlay extends Overlay
 	{
 		Instant now = Instant.now();
 		Duration timeout = Duration.ofSeconds(config.tooltipTimeout());
+		boolean shouldClearDimMap = !dimMap.isEmpty();
 
 		for (ExamineTextTime examine : plugin.getExamines())
 		{
@@ -84,12 +85,14 @@ public class ExamineTooltipOverlay extends Overlay
 				else
 				{
 					renderAsRS3(examine, graphics);
+					shouldClearDimMap = false;
 				}
 			}
-			else
-			{
-				dimMap.remove(examine);
-			}
+		}
+
+		if (shouldClearDimMap || dimMap.size() > 10)
+		{
+			dimMap.clear();
 		}
 
 		return null;
