@@ -30,6 +30,8 @@ import com.google.inject.Provides;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
@@ -51,14 +53,15 @@ import net.runelite.client.util.Text;
 )
 public class ExamineTooltipPlugin extends Plugin
 {
+	private final static String PRICE_CHECK_START = "Price of";
+	private final static Pattern PRICE_CHECK_PATTERN =
+		Pattern.compile("^Price of (?:([\\d,.]+) x )?(.+): (?:GE average (?:([\\d,.]+(?: \\([\\d,.]+ea\\))?)))? (?:HA value (?:([\\d,.]+(?: \\([\\d,.]+ea\\))?)))?$");
+
 	@Inject
 	private OverlayManager overlayManager;
 
 	@Inject
 	private ExamineTooltipOverlay examineTooltipOverlay;
-
-	@Inject
-	private ExamineTooltipConfig config;
 
 	@Getter
 	private final EvictingQueue<ExamineTextTime> examines = EvictingQueue.create(5);
@@ -109,38 +112,18 @@ public class ExamineTooltipPlugin extends Plugin
 		switch (event.getMenuAction())
 		{
 			case EXAMINE_ITEM:
-				if (!config.showItemExamines())
-				{
-					return;
-				}
 				type = ExamineType.ITEM;
 				break;
 			case EXAMINE_ITEM_GROUND:
-				if (!config.showItemExamines())
-				{
-					return;
-				}
 				type = ExamineType.ITEM_GROUND;
 				break;
 			case CC_OP_LOW_PRIORITY:
-				if (!config.showItemExamines())
-				{
-					return;
-				}
 				type = ExamineType.ITEM_INTERFACE;
 				break;
 			case EXAMINE_OBJECT:
-				if (!config.showObjectExamines())
-				{
-					return;
-				}
 				type = ExamineType.OBJECT;
 				break;
 			case EXAMINE_NPC:
-				if (!config.showNPCExamines())
-				{
-					return;
-				}
 				type = ExamineType.NPC;
 				break;
 			default:
@@ -152,6 +135,7 @@ public class ExamineTooltipPlugin extends Plugin
 		examine.setId(id);
 		examine.setWidgetId(wId);
 		examine.setActionParam(actionParam);
+		examine.setObjectName(Text.removeTags(event.getMenuTarget()));
 		pendingExamines.offer(examine);
 	}
 
@@ -162,7 +146,7 @@ public class ExamineTooltipPlugin extends Plugin
 		switch (event.getType())
 		{
 			case ITEM_EXAMINE:
-				if (Text.removeTags(event.getMessage()).startsWith("Price of"))
+				if (Text.removeTags(event.getMessage()).startsWith(PRICE_CHECK_START))
 				{
 					type = ExamineType.PRICE_CHECK;
 				}
@@ -189,13 +173,24 @@ public class ExamineTooltipPlugin extends Plugin
 
 		if (type == ExamineType.PRICE_CHECK)
 		{
-			if (config.showPriceCheck())
+			Matcher matcher = PRICE_CHECK_PATTERN.matcher(text);
+			if (matcher.matches())
 			{
-				ExamineTextTime examine = new ExamineTextTime();
-				examine.setType(type);
-				examine.setText(text);
-				examine.setTime(now);
-				examines.add(examine);
+				String itemName = matcher.group(2);
+				ExamineTextTime matchingExamine;
+				for (ExamineTextTime examine : examines)
+				{
+					ExamineType t = examine.getType();
+					if ((t == ExamineType.ITEM || t == ExamineType.ITEM_GROUND || t == ExamineType.ITEM_INTERFACE)
+						&& examine.getObjectName().equals(itemName))
+					{
+						examine.setQuantity(matcher.group(1));
+						examine.setGeValue(matcher.group(3));
+						examine.setHaValue(matcher.group(4));
+						examine.setContainsPriceCheckInfo(true);
+						break;
+					}
+				}
 			}
 			return;
 		}
@@ -211,6 +206,7 @@ public class ExamineTooltipPlugin extends Plugin
 		{
 			pending.setTime(now);
 			pending.setText(text);
+			pending.setContainsPriceCheckInfo(false);
 			examines.removeIf(x -> x.getText().equals(text));
 			examines.add(pending);
 		}

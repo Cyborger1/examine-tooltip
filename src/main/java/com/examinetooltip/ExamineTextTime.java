@@ -38,4 +38,10 @@ public class ExamineTextTime
 
 	private String text;
 	private Instant time;
+
+	private boolean containsPriceCheckInfo;
+	private String objectName;
+	private String quantity;
+	private String geValue;
+	private String haValue;
 }

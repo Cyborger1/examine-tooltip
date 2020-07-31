@@ -238,7 +238,7 @@ public class ExamineTooltipOverlay extends Overlay
 		}
 
 		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
-		tooltipComponent.setText(getWrappedText(examine.getText()));
+		tooltipComponent.setText(getWrappedText(getFormattedText(examine, true, true)));
 		tooltipComponent.setAlphaModifier(alphaModifier);
 		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
 		tooltipComponent.setModIcons(client.getModIcons());
@@ -303,6 +303,39 @@ public class ExamineTooltipOverlay extends Overlay
 		}
 	}
 
+	private String getFormattedText(ExamineTextTime examine, boolean showName, boolean showPrice)
+	{
+		StringBuilder sb = new StringBuilder();
+		if (showName)
+		{
+			sb.append(examine.getText());
+		}
+		if (showPrice && examine.isContainsPriceCheckInfo())
+		{
+			if (showName)
+			{
+				sb.append("</br>").append("</br>");
+			}
+			String quantity = examine.getQuantity();
+			if (quantity != null)
+			{
+				sb.append(quantity).append(" x ");
+			}
+			sb.append(examine.getObjectName());
+			String ge = examine.getGeValue();
+			if (ge != null)
+			{
+				sb.append("</br>").append("GE: ").append(ge);
+			}
+			String ha = examine.getHaValue();
+			if (ha != null)
+			{
+				sb.append("</br>").append("HA: ").append(ha);
+			}
+		}
+		return sb.toString();
+	}
+
 	// Modified from findItemFromWidget in ExaminePlugin.java in Runelite's Repo
 	private Rectangle findWidgetBounds(int widgetId, int actionParam)
 	{
@@ -318,7 +351,7 @@ public class ExamineTooltipOverlay extends Overlay
 		Widget widgetItem = null;
 		if (WidgetInfo.EQUIPMENT.getGroupId() == widgetGroup
 			|| (WidgetInfo.BANK_EQUIPMENT_CONTAINER.getGroupId() == widgetGroup
-				&& widgetChild >= 75 && widgetChild <= 85)
+			&& widgetChild >= 75 && widgetChild <= 85)
 			|| widgetGroup == 84)
 		{
 			widgetItem = widget.getChild(1);
