@@ -34,6 +34,7 @@ import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayPriority;
+import net.runelite.client.ui.overlay.components.LayoutableRenderableEntity;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
 import org.apache.commons.text.WordUtils;
@@ -57,7 +58,7 @@ public class ExamineTooltipOverlay extends Overlay
 	@Inject
 	private Client client;
 
-	private final Map<ExamineTextTime, Dimension> dimMap = new HashMap<>();
+	private final Map<String, Dimension> dimMap = new HashMap<>();
 
 	public ExamineTooltipOverlay()
 	{
@@ -75,6 +76,28 @@ public class ExamineTooltipOverlay extends Overlay
 
 		for (ExamineTextTime examine : plugin.getExamines())
 		{
+			ExamineType type = examine.getType();
+			if ((!config.showNPCExamines() && type == ExamineType.NPC)
+				|| (!config.showObjectExamines() && type == ExamineType.OBJECT))
+			{
+				continue;
+			}
+
+			boolean showText = true;
+			boolean showPrice = config.showPriceCheck();
+
+			if (type == ExamineType.ITEM || type == ExamineType.ITEM_GROUND || type == ExamineType.ITEM_INTERFACE)
+			{
+				if (!showPrice && !config.showItemExamines())
+				{
+					continue;
+				}
+				else
+				{
+					showText = config.showItemExamines();
+				}
+			}
+
 			Duration since = Duration.between(examine.getTime(), now);
 			if (since.compareTo(timeout) < 0)
 			{
@@ -90,13 +113,16 @@ public class ExamineTooltipOverlay extends Overlay
 					alpha = 1.0;
 				}
 
-				if (!config.rs3Style() || examine.getType() == ExamineType.PRICE_CHECK)
+				LayoutableRenderableEntity component =
+					getComponent(getFormattedText(examine, showText, showPrice), alpha);
+
+				if (!config.rs3Style())
 				{
-					renderAsTooltip(examine, alpha);
+					renderAsTooltip(component);
 				}
 				else
 				{
-					renderAsRS3(examine, graphics, alpha);
+					renderAsRS3(examine, graphics, component);
 					shouldClearDimMap = false;
 				}
 			}
@@ -110,17 +136,22 @@ public class ExamineTooltipOverlay extends Overlay
 		return null;
 	}
 
-	private void renderAsTooltip(ExamineTextTime examine, double alphaModifier)
+	private LayoutableRenderableEntity getComponent(String text, double alphaModifier)
 	{
 		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
-		tooltipComponent.setText(getWrappedText(examine.getText()));
+		tooltipComponent.setText(text);
 		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
 		tooltipComponent.setModIcons(client.getModIcons());
 		tooltipComponent.setAlphaModifier(alphaModifier);
-		tooltipManager.add(new Tooltip(tooltipComponent));
+		return tooltipComponent;
 	}
 
-	private void renderAsRS3(ExamineTextTime examine, Graphics2D graphics, double alphaModifier)
+	private void renderAsTooltip(LayoutableRenderableEntity component)
+	{
+		tooltipManager.add(new Tooltip(component));
+	}
+
+	private void renderAsRS3(ExamineTextTime examine, Graphics2D graphics, LayoutableRenderableEntity component)
 	{
 		ExamineType type = examine.getType();
 		boolean foundObject = false;
@@ -233,17 +264,11 @@ public class ExamineTooltipOverlay extends Overlay
 		// Give up and render as tooltip if target not found
 		if (!foundObject)
 		{
-			renderAsTooltip(examine, alphaModifier);
+			renderAsTooltip(component);
 			return;
 		}
 
-		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
-		tooltipComponent.setText(getFormattedText(examine, true, true));
-		tooltipComponent.setAlphaModifier(alphaModifier);
-		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
-		tooltipComponent.setModIcons(client.getModIcons());
-
-		Dimension dim = dimMap.get(examine);
+		Dimension dim = dimMap.get(examine.getText());
 		if (dim != null)
 		{
 			int xMin, xMax, yMin, yMax;
@@ -287,8 +312,8 @@ public class ExamineTooltipOverlay extends Overlay
 			}
 		}
 
-		tooltipComponent.setPreferredLocation(new Point(x, y));
-		dimMap.put(examine, tooltipComponent.render(graphics));
+		component.setPreferredLocation(new Point(x, y));
+		dimMap.put(examine.getText(), component.render(graphics));
 	}
 
 	private String getWrappedText(String text)
@@ -303,16 +328,16 @@ public class ExamineTooltipOverlay extends Overlay
 		}
 	}
 
-	private String getFormattedText(ExamineTextTime examine, boolean showName, boolean showPrice)
+	private String getFormattedText(ExamineTextTime examine, boolean showExamineText, boolean showPrice)
 	{
 		StringBuilder sb = new StringBuilder();
-		if (showName)
+		if (showExamineText)
 		{
 			sb.append(getWrappedText(examine.getText()));
 		}
 		if (showPrice && examine.isContainsPriceCheckInfo())
 		{
-			if (showName)
+			if (showExamineText)
 			{
 				sb.append("</br>").append("</br>");
 			}
