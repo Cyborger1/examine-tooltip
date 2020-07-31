@@ -238,7 +238,7 @@ public class ExamineTooltipOverlay extends Overlay
 		}
 
 		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
-		tooltipComponent.setText(getWrappedText(getFormattedText(examine, true, true)));
+		tooltipComponent.setText(getFormattedText(examine, true, true));
 		tooltipComponent.setAlphaModifier(alphaModifier);
 		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
 		tooltipComponent.setModIcons(client.getModIcons());
@@ -308,7 +308,7 @@ public class ExamineTooltipOverlay extends Overlay
 		StringBuilder sb = new StringBuilder();
 		if (showName)
 		{
-			sb.append(examine.getText());
+			sb.append(getWrappedText(examine.getText()));
 		}
 		if (showPrice && examine.isContainsPriceCheckInfo())
 		{
