@@ -148,10 +148,7 @@ public class ExamineTooltipOverlay extends Overlay
 
 			case ITEM:
 				int wId = examine.getWidgetId();
-				int widgetGroup = TO_GROUP(wId);
-				int widgetChild = TO_CHILD(wId);
-
-				Widget widget = client.getWidget(widgetGroup, widgetChild);
+				Widget widget = client.getWidget(TO_GROUP(wId), TO_CHILD(wId));
 				if (widget != null)
 				{
 					WidgetItem widgetItem = widget.getWidgetItem(examine.getActionParam());
