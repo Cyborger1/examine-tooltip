@@ -202,25 +202,19 @@ public class ExamineTooltipOverlay extends Overlay
 						}
 					}
 
-					if (shape != null)
+					if (shape == null)
 					{
-						Rectangle box = shape.getBounds();
-						if (box != null)
-						{
-							x = box.x;
-							y = box.height + box.y;
-						}
+						// Fallback to tile
+						shape = Perspective.getCanvasTilePoly(client, point);
 					}
-					// Fallback to tile
-					else
+
+					Rectangle box = shape.getBounds();
+					if (box != null)
 					{
-						net.runelite.api.Point p = Perspective.localToCanvas(client, point, client.getPlane(), -50);
-						if (p != null)
-						{
-							x = p.getX();
-							y = p.getY();
-						}
+						x = box.x;
+						y = box.height + box.y;
 					}
+
 					foundObject = true;
 				}
 
