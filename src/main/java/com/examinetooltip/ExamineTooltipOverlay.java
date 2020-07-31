@@ -208,14 +208,17 @@ public class ExamineTooltipOverlay extends Overlay
 						shape = Perspective.getCanvasTilePoly(client, point);
 					}
 
-					Rectangle box = shape.getBounds();
-					if (box != null)
+					if (shape != null)
 					{
-						x = box.x;
-						y = box.height + box.y;
-					}
+						Rectangle box = shape.getBounds();
+						if (box != null)
+						{
+							x = box.x;
+							y = box.height + box.y;
+						}
 
-					foundObject = true;
+						foundObject = true;
+					}
 				}
 
 				break;
