@@ -23,9 +23,6 @@ import net.runelite.api.TileItem;
 import net.runelite.api.WallObject;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetID;
-import net.runelite.api.widgets.WidgetInfo;
-import static net.runelite.api.widgets.WidgetInfo.SEED_VAULT_ITEM_CONTAINER;
 import static net.runelite.api.widgets.WidgetInfo.TO_CHILD;
 import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
 import net.runelite.api.widgets.WidgetItem;
@@ -300,63 +297,34 @@ public class ExamineTooltipOverlay extends Overlay
 		}
 	}
 
-	// Modified from findItemFromWidget in ExaminePlugin.java in Runelite's Repo
 	private Rectangle findWidgetBounds(int widgetId, int actionParam)
 	{
-		int widgetGroup = TO_GROUP(widgetId);
-		int widgetChild = TO_CHILD(widgetId);
-		Widget widget = client.getWidget(widgetGroup, widgetChild);
+		Widget widget = client.getWidget(TO_GROUP(widgetId), TO_CHILD(widgetId));
 
 		if (widget == null)
 		{
 			return null;
 		}
 
-		Widget widgetItem = null;
-		if (WidgetInfo.EQUIPMENT.getGroupId() == widgetGroup
-			|| (WidgetInfo.BANK_EQUIPMENT_CONTAINER.getGroupId() == widgetGroup
-				&& widgetChild >= 75 && widgetChild <= 85)
-			|| widgetGroup == 84)
+		if (actionParam < 0)
 		{
-			widgetItem = widget.getChild(1);
-		}
-		else if (WidgetInfo.SMITHING_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup)
-		{
-			widgetItem = widget.getChild(2);
-		}
-		else if (WidgetInfo.BANK_ITEM_CONTAINER.getGroupId() == widgetGroup
-			|| WidgetInfo.CLUE_SCROLL_REWARD_ITEM_CONTAINER.getGroupId() == widgetGroup
-			|| WidgetInfo.LOOTING_BAG_CONTAINER.getGroupId() == widgetGroup
-			|| WidgetID.SEED_VAULT_INVENTORY_GROUP_ID == widgetGroup
-			|| WidgetID.SEED_BOX_GROUP_ID == widgetGroup
-			|| WidgetID.PLAYER_TRADE_SCREEN_GROUP_ID == widgetGroup
-			|| WidgetID.PLAYER_TRADE_INVENTORY_GROUP_ID == widgetGroup
-			|| WidgetID.SHOP_INVENTORY_GROUP_ID == widgetGroup
-			|| WidgetID.GUIDE_PRICE_GROUP_ID == widgetGroup
-			|| WidgetID.EQUIPMENT_INVENTORY_GROUP_ID == widgetGroup
-			|| WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup
-			|| WidgetInfo.RUNE_POUCH_ITEM_CONTAINER.getGroupId() == widgetGroup
-			|| WidgetInfo.SHOP_ITEMS_CONTAINER.getGroupId() == widgetGroup)
-		{
-			widgetItem = widget.getChild(actionParam);
-		}
-		else if (WidgetID.SEED_VAULT_GROUP_ID == widgetGroup)
-		{
-			Widget seedWidget = client.getWidget(SEED_VAULT_ITEM_CONTAINER);
-			if (seedWidget != null)
-			{
-				widgetItem = seedWidget.getChild(actionParam);
-			}
+			return widget.getBounds();
 		}
 
-		if (widgetItem != null)
+		try
 		{
-			return widgetItem.getBounds();
+			Widget widgetItem = widget.getChild(actionParam);
+			if (widgetItem != null)
+			{
+				return widgetItem.getBounds();
+			}
 		}
-		else
+		catch (Exception e)
 		{
-			return null;
+			// Ignore
 		}
+
+		return null;
 	}
 
 	private Shape getObjectShapeFromTile(Tile tile, LocalPoint point, ExamineType type, int id)
