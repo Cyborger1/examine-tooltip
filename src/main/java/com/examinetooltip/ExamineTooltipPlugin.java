@@ -55,7 +55,7 @@ public class ExamineTooltipPlugin extends Plugin
 {
 	private final static String PRICE_CHECK_START = "Price of";
 	private final static Pattern PRICE_CHECK_PATTERN =
-		Pattern.compile("^Price of (?:([\\d,.]+) x )?(.+): (?:GE average (?:([\\d,.]+(?: \\([\\d,.]+ea\\))?)))? (?:HA value (?:([\\d,.]+(?: \\([\\d,.]+ea\\))?)))?$");
+		Pattern.compile("^Price of (?:([\\d,.]+) x )?(.+):(?: GE average (?:([\\d,\\.]+(?: \\([\\d,\\.]+ea\\))?)))?(?: HA value (?:([\\d,\\.]+(?: \\([\\d,\\.]+ea\\))?)))?$");
 
 	@Inject
 	private OverlayManager overlayManager;
