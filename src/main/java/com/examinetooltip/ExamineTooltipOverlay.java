@@ -15,6 +15,7 @@ import java.util.Map;
 import net.runelite.api.Client;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
+import net.runelite.api.GroundObject;
 import net.runelite.api.NPC;
 import net.runelite.api.ObjectComposition;
 import net.runelite.api.Perspective;
@@ -381,6 +382,15 @@ public class ExamineTooltipOverlay extends Overlay
 							}
 						}
 					}
+				}
+			}
+
+			if (shape == null)
+			{
+				GroundObject object = tile.getGroundObject();
+				if (object != null && object.getId() == id)
+				{
+					shape = object.getConvexHull();
 				}
 			}
 
