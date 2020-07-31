@@ -10,13 +10,14 @@ import java.awt.Shape;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import net.runelite.api.Client;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
+import net.runelite.api.ItemLayer;
 import net.runelite.api.NPC;
+import net.runelite.api.Node;
 import net.runelite.api.ObjectComposition;
 import net.runelite.api.Perspective;
 import net.runelite.api.Tile;
@@ -187,13 +188,13 @@ public class ExamineTooltipOverlay extends Overlay
 
 				if (tile != null)
 				{
-					Shape shape = getObjectShapeFromTile(tile, point, type, id);
+					Shape shape = getObjectShapeFromTile(tile, type, id);
 					if (shape == null)
 					{
 						Tile bridge = tile.getBridge();
 						if (bridge != null)
 						{
-							shape = getObjectShapeFromTile(bridge, point, type, id);
+							shape = getObjectShapeFromTile(bridge, type, id);
 						}
 					}
 
@@ -325,25 +326,23 @@ public class ExamineTooltipOverlay extends Overlay
 		return null;
 	}
 
-	private Shape getObjectShapeFromTile(Tile tile, LocalPoint point, ExamineType type, int id)
+	private Shape getObjectShapeFromTile(Tile tile, ExamineType type, int id)
 	{
 		Shape shape = null;
 		if (type == ExamineType.ITEM_GROUND)
 		{
-			List<TileItem> groundItemsList = tile.getGroundItems();
-			if (groundItemsList != null)
+			ItemLayer itemLayer = tile.getItemLayer();
+			if (itemLayer != null)
 			{
-				for (TileItem item : groundItemsList)
+				Node current = itemLayer.getBottom();
+				while (current instanceof TileItem)
 				{
-					if (item != null && item.getId() == id)
+					if (((TileItem) current).getId() == id)
 					{
-						shape = Perspective.getClickbox(client,
-							item.getModel(), 0, point);
-						if (shape != null)
-						{
-							break;
-						}
+						shape = itemLayer.getCanvasTilePoly();
+						break;
 					}
+					current = current.getNext();
 				}
 			}
 		}
