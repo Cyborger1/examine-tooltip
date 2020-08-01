@@ -116,7 +116,7 @@ public class ExamineTooltipPlugin extends Plugin
 				type = ExamineType.ITEM;
 				break;
 			case EXAMINE_ITEM_GROUND:
-				if (!config.showItemExamines())
+				if (!config.showGroundItemExamines())
 				{
 					return;
 				}

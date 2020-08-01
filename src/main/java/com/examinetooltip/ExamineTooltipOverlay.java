@@ -219,47 +219,50 @@ public class ExamineTooltipOverlay extends Overlay
 		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
 		tooltipComponent.setModIcons(client.getModIcons());
 
-		Dimension dim = dimMap.get(examine);
-		if (dim != null)
+		if (isInterfaceExamine || config.clampRS3())
 		{
-			int xMin, xMax, yMin, yMax;
+			Dimension dim = dimMap.get(examine);
+			if (dim != null)
+			{
+				int xMin, xMax, yMin, yMax;
 
-			if (isInterfaceExamine)
-			{
-				xMin = 0;
-				xMax = client.getCanvas().getSize().width;
-				yMin = 0;
-				yMax = client.getCanvas().getSize().height;
-			}
-			else
-			{
-				xMin = client.getViewportXOffset();
-				xMax = client.getViewportWidth() + xMin;
-				yMin = client.getViewportYOffset();
-				yMax = client.getViewportHeight() + yMin;
-			}
+				if (isInterfaceExamine)
+				{
+					xMin = 0;
+					xMax = client.getCanvas().getSize().width;
+					yMin = 0;
+					yMax = client.getCanvas().getSize().height;
+				}
+				else
+				{
+					xMin = client.getViewportXOffset();
+					xMax = client.getViewportWidth() + xMin;
+					yMin = client.getViewportYOffset();
+					yMax = client.getViewportHeight() + yMin;
+				}
 
-			xMin += SCREEN_PADDING;
-			xMax -= SCREEN_PADDING;
-			yMin += SCREEN_PADDING;
-			yMax -= SCREEN_PADDING;
+				xMin += SCREEN_PADDING;
+				xMax -= SCREEN_PADDING;
+				yMin += SCREEN_PADDING;
+				yMax -= SCREEN_PADDING;
 
-			if (x < xMin)
-			{
-				x = xMin;
-			}
-			else if (x + dim.width > xMax)
-			{
-				x = xMax - dim.width;
-			}
+				if (x < xMin)
+				{
+					x = xMin;
+				}
+				else if (x + dim.width > xMax)
+				{
+					x = xMax - dim.width;
+				}
 
-			if (y < yMin)
-			{
-				y = yMin;
-			}
-			else if (y + dim.height > yMax)
-			{
-				y = yMax - dim.height;
+				if (y < yMin)
+				{
+					y = yMin;
+				}
+				else if (y + dim.height > yMax)
+				{
+					y = yMax - dim.height;
+				}
 			}
 		}
 

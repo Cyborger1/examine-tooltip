@@ -40,23 +40,43 @@ public interface ExamineTooltipConfig extends Config
 	@ConfigItem(
 		keyName = "rs3Style",
 		name = "RS3 style examine box",
-		description = "Show examines as a hovering box under the examined items, else show as cursor tooltip",
+		description = "Show examines as a hovering box under the examined items, else show as a cursor tooltip",
 		position = 1
 	)
-
 	default boolean rs3Style()
 	{
 		return true;
 	}
 
 	@ConfigItem(
-		keyName = ITEM_EXAMINES_KEY_NAME,
-		name = "Show item examines",
-		description = "Show text from examining items",
+		keyName = "clampRS3",
+		name = "Clamp RS3 examine boxes",
+		description = "Prevent the RS3 examine boxes from going offscreen",
 		position = 2
 	)
+	default boolean clampRS3()
+	{
+		return true;
+	}
 
+	@ConfigItem(
+		keyName = ITEM_EXAMINES_KEY_NAME,
+		name = "Show interface item examines",
+		description = "Show text from examining items in interfaces (e.g. inventory, bank, etc.)",
+		position = 3
+	)
 	default boolean showItemExamines()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "showGroundItemExamines",
+		name = "Show ground item examines",
+		description = "Show text from examining items on the ground",
+		position = 4
+	)
+	default boolean showGroundItemExamines()
 	{
 		return true;
 	}
@@ -65,7 +85,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showPriceCheck",
 		name = "Show price check",
 		description = "Show the price check text from the Examine Plugin (\"Price of ...\"), always shown as cursor tooltip",
-		position = 3
+		position = 5
 	)
 	default boolean showPriceCheck()
 	{
@@ -76,7 +96,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showObjectExamines",
 		name = "Show object examines",
 		description = "Show text from examining objects (e.g. scenery)",
-		position = 4
+		position = 6
 	)
 	default boolean showObjectExamines()
 	{
@@ -87,7 +107,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showNPCExamines",
 		name = "Show NPC examines",
 		description = "Show text from examining NPCs",
-		position = 5
+		position = 7
 	)
 	default boolean showNPCExamines()
 	{
@@ -98,7 +118,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "tooltipTimeout",
 		name = "Tooltip timeout",
 		description = "How long to show the examine tooltip",
-		position = 6
+		position = 8
 	)
 	@Units(Units.SECONDS)
 	@Range(min = 1, max = 10)
@@ -111,7 +131,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "tooltipFadeout",
 		name = "Tooltip fadeout",
 		description = "Start fading out the tooltip X milliseconds before it disappears, 0 means no fadeout",
-		position = 7
+		position = 9
 	)
 	@Units(Units.MILLISECONDS)
 	@Range(min = 0, max = 3000)
@@ -123,8 +143,8 @@ public interface ExamineTooltipConfig extends Config
 	@ConfigItem(
 		keyName = "wrapTooltip",
 		name = "Wrap tooltip",
-		description = "Wraps the text in the tooltip if it gets too long",
-		position = 8
+		description = "Wrap the text in the tooltip if it gets too long",
+		position = 10
 	)
 	default boolean wrapTooltip()
 	{
@@ -135,7 +155,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltipColumns",
 		name = "Wrap columns",
 		description = "How many text columns (or characters) before wrapping the text",
-		position = 9
+		position = 11
 	)
 	@Range(
 		min = 20
