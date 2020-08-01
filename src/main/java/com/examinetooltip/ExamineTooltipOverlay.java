@@ -39,7 +39,8 @@ import org.apache.commons.text.WordUtils;
 
 public class ExamineTooltipOverlay extends Overlay
 {
-	private final static int PADDING = 5;
+	private final static int SCREEN_PADDING = 5;
+	private final static int EXAMINE_PADDING = 10;
 
 	@Inject
 	private TooltipManager tooltipManager;
@@ -122,8 +123,7 @@ public class ExamineTooltipOverlay extends Overlay
 	private void renderAsRS3(ExamineTextTime examine, Graphics2D graphics, double alphaModifier)
 	{
 		ExamineType type = examine.getType();
-		boolean foundObject = false;
-		int x = 0, y = 0;
+		Rectangle bounds = null;
 		switch (type)
 		{
 			case NPC:
@@ -134,13 +134,7 @@ public class ExamineTooltipOverlay extends Overlay
 					Shape shape = npc.getConvexHull();
 					if (shape != null)
 					{
-						Rectangle box = shape.getBounds();
-						if (box != null)
-						{
-							x = box.x;
-							y = box.height + box.y;
-							foundObject = true;
-						}
+						bounds = shape.getBounds();
 					}
 				}
 				break;
@@ -153,25 +147,13 @@ public class ExamineTooltipOverlay extends Overlay
 					WidgetItem widgetItem = widget.getWidgetItem(examine.getActionParam());
 					if (widgetItem != null)
 					{
-						Rectangle slotBounds = widgetItem.getCanvasBounds();
-						if (slotBounds != null)
-						{
-							x = slotBounds.x;
-							y = slotBounds.height + slotBounds.y;
-							foundObject = true;
-						}
+						bounds = widgetItem.getCanvasBounds();
 					}
 				}
 				break;
 
 			case ITEM_INTERFACE:
-				Rectangle bounds = findWidgetBounds(examine.getWidgetId(), examine.getActionParam());
-				if (bounds != null)
-				{
-					x = bounds.x;
-					y = bounds.height + bounds.y;
-					foundObject = true;
-				}
+				bounds = findWidgetBounds(examine.getWidgetId(), examine.getActionParam());
 				break;
 
 			case ITEM_GROUND:
@@ -203,14 +185,7 @@ public class ExamineTooltipOverlay extends Overlay
 
 					if (shape != null)
 					{
-						Rectangle box = shape.getBounds();
-						if (box != null)
-						{
-							x = box.x;
-							y = box.height + box.y;
-						}
-
-						foundObject = true;
+						bounds = shape.getBounds();
 					}
 				}
 
@@ -221,10 +196,21 @@ public class ExamineTooltipOverlay extends Overlay
 		}
 
 		// Give up and render as tooltip if target not found
-		if (!foundObject)
+		if (bounds == null)
 		{
 			renderAsTooltip(examine, alphaModifier);
 			return;
+		}
+
+		boolean isInterfaceExamine = type == ExamineType.ITEM || type == ExamineType.ITEM_INTERFACE;
+
+		int x = bounds.x;
+		int y = bounds.height + bounds.y;
+
+		if (!isInterfaceExamine)
+		{
+			x -= EXAMINE_PADDING;
+			y += EXAMINE_PADDING;
 		}
 
 		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
@@ -238,7 +224,7 @@ public class ExamineTooltipOverlay extends Overlay
 		{
 			int xMin, xMax, yMin, yMax;
 
-			if (type == ExamineType.ITEM || type == ExamineType.ITEM_INTERFACE)
+			if (isInterfaceExamine)
 			{
 				xMin = 0;
 				xMax = client.getCanvas().getSize().width;
@@ -253,10 +239,10 @@ public class ExamineTooltipOverlay extends Overlay
 				yMax = client.getViewportHeight() + yMin;
 			}
 
-			xMin += PADDING;
-			xMax -= PADDING;
-			yMin += PADDING;
-			yMax -= PADDING;
+			xMin += SCREEN_PADDING;
+			xMax -= SCREEN_PADDING;
+			yMin += SCREEN_PADDING;
+			yMax -= SCREEN_PADDING;
 
 			if (x < xMin)
 			{
