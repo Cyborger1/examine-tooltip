@@ -131,10 +131,7 @@ public class ExamineTooltipOverlay extends Overlay
 				final NPC npc = cachedNPCs[examine.getId()];
 				if (npc != null)
 				{
-					Shape shape = Perspective.getClickbox(client,
-						npc.getModel(),
-						npc.getOrientation(),
-						npc.getLocalLocation());
+					Shape shape = npc.getConvexHull();
 					if (shape != null)
 					{
 						Rectangle box = shape.getBounds();
