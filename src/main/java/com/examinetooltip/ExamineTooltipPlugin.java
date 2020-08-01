@@ -46,8 +46,8 @@ import net.runelite.client.util.Text;
 @Slf4j
 @PluginDescriptor(
 	name = "Examine Tooltip",
-	description = "Adds tooltips on screen when examining things",
-	tags = {"examine", "tooltip", "text"}
+	description = "Shows tooltips or RS3 style hover boxes on examine",
+	tags = {"examine", "tooltip", "text", "hover", "rs3"}
 )
 public class ExamineTooltipPlugin extends Plugin
 {
