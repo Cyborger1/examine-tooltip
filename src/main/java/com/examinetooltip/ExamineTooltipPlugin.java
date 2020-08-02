@@ -203,7 +203,7 @@ public class ExamineTooltipPlugin extends Plugin
 				type = ExamineType.NPC;
 				break;
 			case GAMEMESSAGE:
-				if (PATCH_INSPECT_PATTERN.matcher(Text.removeTags(event.getMessage())).lookingAt())
+				if (PATCH_INSPECT_PATTERN.matcher(event.getMessage()).lookingAt())
 				{
 					type = ExamineType.PATCH_INSPECT;
 				}
@@ -265,7 +265,6 @@ public class ExamineTooltipPlugin extends Plugin
 		else
 		{
 			pendingExamines.clear();
-			pendingPatchInspect = null;
 		}
 	}
 }
