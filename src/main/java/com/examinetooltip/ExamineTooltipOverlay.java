@@ -234,9 +234,6 @@ public class ExamineTooltipOverlay extends Overlay
 			return;
 		}
 
-
-		rectMap.put(examine, bounds);
-
 		boolean isInterfaceExamine = type == ExamineType.ITEM || type == ExamineType.ITEM_INTERFACE;
 
 		int x = bounds.x;
@@ -299,6 +296,7 @@ public class ExamineTooltipOverlay extends Overlay
 
 		tooltipComponent.setPreferredLocation(new Point(x, y));
 		dimMap.put(examine, tooltipComponent.render(graphics));
+		rectMap.put(examine, bounds);
 	}
 
 	private String getWrappedText(String text)
