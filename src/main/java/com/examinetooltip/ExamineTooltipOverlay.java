@@ -126,7 +126,7 @@ public class ExamineTooltipOverlay extends Overlay
 		tooltipComponent.setModIcons(client.getModIcons());
 		tooltipComponent.setAlphaModifier(alphaModifier);
 
-		if (config.useCustomBackgroundColor())
+		if (config.customBackgroundColor() != null)
 		{
 			tooltipComponent.setBackgroundColor(config.customBackgroundColor());
 		}

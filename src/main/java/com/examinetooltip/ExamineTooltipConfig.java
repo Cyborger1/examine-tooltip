@@ -33,7 +33,6 @@ import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
-import net.runelite.client.ui.overlay.components.ComponentConstants;
 
 @ConfigGroup(ExamineTooltipConfig.CONFIG_GROUP)
 public interface ExamineTooltipConfig extends Config
@@ -225,28 +224,13 @@ public interface ExamineTooltipConfig extends Config
 		return 30;
 	}
 
-	@ConfigItem(
-		keyName = "useCustomBackgroundColor",
-		name = "Use custom background color",
-		description = "Use a custom background color instead of the globally configured overlay background default",
-		position = 23,
-		section = displaySettings
-	)
-	default boolean useCustomBackgroundColor()
-	{
-		return false;
-	}
-
 	@Alpha
 	@ConfigItem(
 		keyName = "customBackgroundColor",
 		name = "Custom background color",
-		description = "The custom background to use",
-		position = 24,
+		description = "Use a custom background color instead of the globally configured overlay background default",
+		position = 23,
 		section = displaySettings
 	)
-	default Color customBackgroundColor()
-	{
-		return ComponentConstants.STANDARD_BACKGROUND_COLOR;
-	}
+	Color customBackgroundColor();
 }
