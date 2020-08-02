@@ -147,7 +147,7 @@ public class ExamineTooltipOverlay extends Overlay
 					WidgetItem widgetItem = widget.getWidgetItem(examine.getActionParam());
 					if (widgetItem != null)
 					{
-						bounds = widgetItem.getCanvasBounds();
+						bounds = widgetItem.getCanvasBounds(false);
 					}
 				}
 				break;
