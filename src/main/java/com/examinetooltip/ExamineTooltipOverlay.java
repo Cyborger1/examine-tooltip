@@ -33,6 +33,7 @@ import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayPriority;
+import net.runelite.client.ui.overlay.components.LayoutableRenderableEntity;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
 import org.apache.commons.text.WordUtils;
@@ -58,6 +59,7 @@ public class ExamineTooltipOverlay extends Overlay
 	private Client client;
 
 	private final Map<ExamineTextTime, Dimension> dimMap = new HashMap<>();
+	private final Map<ExamineTextTime, Rectangle> rectMap = new HashMap<>();
 
 	public ExamineTooltipOverlay()
 	{
@@ -72,6 +74,7 @@ public class ExamineTooltipOverlay extends Overlay
 		Instant now = Instant.now();
 		Duration timeout = Duration.ofSeconds(config.tooltipTimeout());
 		boolean shouldClearDimMap = !dimMap.isEmpty();
+		boolean shouldClearRectMap = !rectMap.isEmpty();
 
 		for (ExamineTextTime examine : plugin.getExamines())
 		{
@@ -98,6 +101,7 @@ public class ExamineTooltipOverlay extends Overlay
 				{
 					renderAsRS3(examine, graphics, alpha);
 					shouldClearDimMap = false;
+					shouldClearRectMap = false;
 				}
 			}
 		}
@@ -107,17 +111,36 @@ public class ExamineTooltipOverlay extends Overlay
 			dimMap.clear();
 		}
 
+		if (shouldClearRectMap || rectMap.size() > 10)
+		{
+			rectMap.clear();
+		}
+
 		return null;
+	}
+
+	private LayoutableRenderableEntity getRenderableEntity(ExamineTextTime examine, double alphaModifier)
+	{
+		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
+		tooltipComponent.setText(getWrappedText(examine.getText()));
+		tooltipComponent.setModIcons(client.getModIcons());
+		tooltipComponent.setAlphaModifier(alphaModifier);
+
+		if (config.useCustomBackgroundColor())
+		{
+			tooltipComponent.setBackgroundColor(config.customBackgroundColor());
+		}
+		else
+		{
+			tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
+		}
+
+		return tooltipComponent;
 	}
 
 	private void renderAsTooltip(ExamineTextTime examine, double alphaModifier)
 	{
-		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
-		tooltipComponent.setText(getWrappedText(examine.getText()));
-		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
-		tooltipComponent.setModIcons(client.getModIcons());
-		tooltipComponent.setAlphaModifier(alphaModifier);
-		tooltipManager.add(new Tooltip(tooltipComponent));
+		tooltipManager.add(new Tooltip(getRenderableEntity(examine, alphaModifier)));
 	}
 
 	private void renderAsRS3(ExamineTextTime examine, Graphics2D graphics, double alphaModifier)
@@ -195,6 +218,12 @@ public class ExamineTooltipOverlay extends Overlay
 				return;
 		}
 
+		// Try previously known location
+		if (bounds == null && config.previousBoundsFallback())
+		{
+			bounds = rectMap.get(examine);
+		}
+
 		// Give up and render as tooltip if target not found
 		if (bounds == null)
 		{
@@ -204,6 +233,9 @@ public class ExamineTooltipOverlay extends Overlay
 			}
 			return;
 		}
+
+
+		rectMap.put(examine, bounds);
 
 		boolean isInterfaceExamine = type == ExamineType.ITEM || type == ExamineType.ITEM_INTERFACE;
 
@@ -216,11 +248,7 @@ public class ExamineTooltipOverlay extends Overlay
 			y += EXAMINE_PADDING;
 		}
 
-		final AlphaTooltipComponent tooltipComponent = new AlphaTooltipComponent();
-		tooltipComponent.setText(getWrappedText(examine.getText()));
-		tooltipComponent.setAlphaModifier(alphaModifier);
-		tooltipComponent.setBackgroundColor(runeLiteConfig.overlayBackgroundColor());
-		tooltipComponent.setModIcons(client.getModIcons());
+		final LayoutableRenderableEntity tooltipComponent = getRenderableEntity(examine, alphaModifier);
 
 		if (isInterfaceExamine || config.clampRS3())
 		{

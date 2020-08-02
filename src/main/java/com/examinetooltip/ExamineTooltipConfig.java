@@ -25,11 +25,15 @@
  */
 package com.examinetooltip;
 
+import java.awt.Color;
+import net.runelite.client.config.Alpha;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
+import net.runelite.client.ui.overlay.components.ComponentConstants;
 
 @ConfigGroup(ExamineTooltipConfig.CONFIG_GROUP)
 public interface ExamineTooltipConfig extends Config
@@ -37,11 +41,33 @@ public interface ExamineTooltipConfig extends Config
 	String CONFIG_GROUP = "examinetooltip";
 	String ITEM_EXAMINES_KEY_NAME = "showItemExamines";
 
+	@ConfigSection(
+		name = "RS3 examine settings",
+		description = "Settings relating to using RS3 style examine boxes",
+		position = 0
+	)
+	String rs3ExamineSettings = "rs3ExamineSettings";
+
+	@ConfigSection(
+		name = "Examine types settings",
+		description = "Settings to select which examine types to process",
+		position = 1
+	)
+	String examineTypesSettings = "examineTypesSettings";
+
+	@ConfigSection(
+		name = "Examine box display settings",
+		description = "Settings relating to how the examine box is displayed visually",
+		position = 2
+	)
+	String displaySettings = "Box display settings";
+
 	@ConfigItem(
 		keyName = "rs3Style",
 		name = "RS3 style examine box",
 		description = "Show examines as a hovering box under the examined items, else show as a cursor tooltip",
-		position = 1
+		position = 10,
+		section = rs3ExamineSettings
 	)
 	default boolean rs3Style()
 	{
@@ -52,7 +78,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "clampRS3",
 		name = "Clamp RS3 examine boxes",
 		description = "Prevent the RS3 examine boxes from going offscreen",
-		position = 2
+		position = 11,
+		section = rs3ExamineSettings
 	)
 	default boolean clampRS3()
 	{
@@ -60,10 +87,23 @@ public interface ExamineTooltipConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "previousBoundsFallback",
+		name = "Enable screen location fallback",
+		description = "Show examines in the last known screen location when the examined object cannot be found",
+		position = 12,
+		section = rs3ExamineSettings
+	)
+	default boolean previousBoundsFallback()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "tooltipFallback",
 		name = "Enable tooltip fallback",
-		description = "When RS3 examine is on, show examines as tooltips when the examined object cannot be found",
-		position = 3
+		description = "Show examines as tooltips when the examined object cannot be found",
+		position = 13,
+		section = rs3ExamineSettings
 	)
 	default boolean tooltipFallback()
 	{
@@ -74,7 +114,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showPriceCheck",
 		name = "Show price check",
 		description = "Show the price check text from the Examine Plugin (\"Price of ...\"), always shown as cursor tooltip",
-		position = 4
+		position = 14,
+		section = examineTypesSettings
 	)
 	default boolean showPriceCheck()
 	{
@@ -85,7 +126,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = ITEM_EXAMINES_KEY_NAME,
 		name = "Show interface item examines",
 		description = "Show text from examining items in interfaces (e.g. inventory, bank, etc.)",
-		position = 5
+		position = 15,
+		section = examineTypesSettings
 	)
 	default boolean showItemExamines()
 	{
@@ -96,7 +138,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showGroundItemExamines",
 		name = "Show ground item examines",
 		description = "Show text from examining items on the ground",
-		position = 6
+		position = 16,
+		section = examineTypesSettings
 	)
 	default boolean showGroundItemExamines()
 	{
@@ -107,7 +150,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showObjectExamines",
 		name = "Show object examines",
 		description = "Show text from examining objects (e.g. scenery)",
-		position = 7
+		position = 17,
+		section = examineTypesSettings
 	)
 	default boolean showObjectExamines()
 	{
@@ -118,7 +162,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showNPCExamines",
 		name = "Show NPC examines",
 		description = "Show text from examining NPCs",
-		position = 8
+		position = 18,
+		section = examineTypesSettings
 	)
 	default boolean showNPCExamines()
 	{
@@ -129,7 +174,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "tooltipTimeout",
 		name = "Tooltip timeout",
 		description = "How long to show the examine tooltip",
-		position = 9
+		position = 19,
+		section = displaySettings
 	)
 	@Units(Units.SECONDS)
 	@Range(min = 1, max = 10)
@@ -142,7 +188,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "tooltipFadeout",
 		name = "Tooltip fadeout",
 		description = "Start fading out the tooltip X milliseconds before it disappears, 0 means no fadeout",
-		position = 10
+		position = 20,
+		section = displaySettings
 	)
 	@Units(Units.MILLISECONDS)
 	@Range(min = 0, max = 3000)
@@ -155,7 +202,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltip",
 		name = "Wrap tooltip",
 		description = "Wrap the text in the tooltip if it gets too long",
-		position = 11
+		position = 21,
+		section = displaySettings
 	)
 	default boolean wrapTooltip()
 	{
@@ -166,7 +214,8 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltipColumns",
 		name = "Wrap columns",
 		description = "How many text columns (or characters) before wrapping the text",
-		position = 12
+		position = 22,
+		section = displaySettings
 	)
 	@Range(
 		min = 20
@@ -174,5 +223,30 @@ public interface ExamineTooltipConfig extends Config
 	default int wrapTooltipColumns()
 	{
 		return 30;
+	}
+
+	@ConfigItem(
+		keyName = "useCustomBackgroundColor",
+		name = "Use custom background color",
+		description = "Use a custom background color instead of the globally configured overlay background default",
+		position = 23,
+		section = displaySettings
+	)
+	default boolean useCustomBackgroundColor()
+	{
+		return false;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "customBackgroundColor",
+		name = "Custom background color",
+		description = "The custom background to use",
+		position = 24,
+		section = displaySettings
+	)
+	default Color customBackgroundColor()
+	{
+		return ComponentConstants.STANDARD_BACKGROUND_COLOR;
 	}
 }
