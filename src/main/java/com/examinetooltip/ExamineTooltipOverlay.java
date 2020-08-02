@@ -179,6 +179,7 @@ public class ExamineTooltipOverlay extends Overlay
 				bounds = findWidgetBounds(examine.getWidgetId(), examine.getActionParam());
 				break;
 
+			case PATCH_INSPECT:
 			case ITEM_GROUND:
 			case OBJECT:
 				// Yes, for these, ActionParam and WidgetID are scene coordinates
@@ -371,20 +372,24 @@ public class ExamineTooltipOverlay extends Overlay
 					if (object != null)
 					{
 						int objId = object.getId();
-						ObjectComposition comp = client.getObjectDefinition(objId);
-						if (comp != null)
+						// PATCH_INSPECT uses the ID of the patch itself, not the contents
+						if (type != ExamineType.PATCH_INSPECT)
 						{
-							try
+							ObjectComposition comp = client.getObjectDefinition(objId);
+							if (comp != null)
 							{
-								ObjectComposition impostor = comp.getImpostor();
-								if (impostor != null)
+								try
 								{
-									objId = impostor.getId();
+									ObjectComposition impostor = comp.getImpostor();
+									if (impostor != null)
+									{
+										objId = impostor.getId();
+									}
 								}
-							}
-							catch (Exception e)
-							{
-								// Ignore
+								catch (Exception e)
+								{
+									// Ignore
+								}
 							}
 						}
 						if (objId == id)

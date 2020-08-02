@@ -170,10 +170,22 @@ public interface ExamineTooltipConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "showPatchInspects",
+		name = "Show farming patch inspects",
+		description = "Show text from inspecting farming patches",
+		position = 19,
+		section = examineTypesSettings
+	)
+	default boolean showPatchInspects()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "tooltipTimeout",
 		name = "Tooltip timeout",
 		description = "How long to show the examine tooltip",
-		position = 19,
+		position = 20,
 		section = displaySettings
 	)
 	@Units(Units.SECONDS)
@@ -187,7 +199,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "tooltipFadeout",
 		name = "Tooltip fadeout",
 		description = "Start fading out the tooltip X milliseconds before it disappears, 0 means no fadeout",
-		position = 20,
+		position = 21,
 		section = displaySettings
 	)
 	@Units(Units.MILLISECONDS)
@@ -201,7 +213,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltip",
 		name = "Wrap tooltip",
 		description = "Wrap the text in the tooltip if it gets too long",
-		position = 21,
+		position = 22,
 		section = displaySettings
 	)
 	default boolean wrapTooltip()
@@ -213,7 +225,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltipColumns",
 		name = "Wrap columns",
 		description = "How many text columns (or characters) before wrapping the text",
-		position = 22,
+		position = 23,
 		section = displaySettings
 	)
 	@Range(
@@ -229,7 +241,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "customBackgroundColor",
 		name = "Custom background color",
 		description = "Use a custom background color instead of the globally configured overlay background default",
-		position = 23,
+		position = 24,
 		section = displaySettings
 	)
 	Color customBackgroundColor();
