@@ -71,27 +71,30 @@ public class ExamineTooltipPlugin extends Plugin
 		return configManager.getConfig(ExamineTooltipConfig.class);
 	}
 
+	private void resetPlugin()
+	{
+		examines.clear();
+		pendingExamines.clear();
+	}
+
 	@Override
 	protected void startUp() throws Exception
 	{
 		overlayManager.add(examineTooltipOverlay);
-		examines.clear();
-		pendingExamines.clear();
+		resetPlugin();
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
 		overlayManager.remove(examineTooltipOverlay);
-		examines.clear();
-		pendingExamines.clear();
+		resetPlugin();
 	}
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged event)
 	{
-		examines.clear();
-		pendingExamines.clear();
+		resetPlugin();
 	}
 
 	@Subscribe
