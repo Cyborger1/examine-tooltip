@@ -198,7 +198,10 @@ public class ExamineTooltipOverlay extends Overlay
 		// Give up and render as tooltip if target not found
 		if (bounds == null)
 		{
-			renderAsTooltip(examine, alphaModifier);
+			if (config.tooltipFallback())
+			{
+				renderAsTooltip(examine, alphaModifier);
+			}
 			return;
 		}
 
