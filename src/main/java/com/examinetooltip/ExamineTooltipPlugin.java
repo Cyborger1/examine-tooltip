@@ -52,7 +52,7 @@ import net.runelite.client.util.Text;
 )
 public class ExamineTooltipPlugin extends Plugin
 {
-	private static Pattern PATCH_INSPECT_PATTERN = Pattern.compile("^This is an? .+\\. The soil has");
+	private static Pattern PATCH_INSPECT_PATTERN = Pattern.compile("^This is an? .+\\. The (?:soil|patch) has");
 
 	@Inject
 	private OverlayManager overlayManager;
