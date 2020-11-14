@@ -107,62 +107,74 @@ public class ExamineTooltipPlugin extends Plugin
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
 		String option = Text.removeTags(event.getMenuOption());
-		if (!(option.equals("Examine") || option.equals("Inspect")))
+
+		ExamineType type;
+		if (option.equals("Examine"))
+		{
+			switch (event.getMenuAction())
+			{
+				case EXAMINE_ITEM:
+					if (!config.showItemExamines())
+					{
+						return;
+					}
+					type = ExamineType.ITEM;
+					break;
+				case EXAMINE_ITEM_GROUND:
+					if (!config.showGroundItemExamines())
+					{
+						return;
+					}
+					type = ExamineType.ITEM_GROUND;
+					break;
+				case CC_OP_LOW_PRIORITY:
+					if (!config.showItemExamines())
+					{
+						return;
+					}
+					type = ExamineType.ITEM_INTERFACE;
+					break;
+				case EXAMINE_OBJECT:
+					if (!config.showObjectExamines())
+					{
+						return;
+					}
+					type = ExamineType.OBJECT;
+					break;
+				case EXAMINE_NPC:
+					if (!config.showNPCExamines())
+					{
+						return;
+					}
+					type = ExamineType.NPC;
+					break;
+				default:
+					return;
+			}
+		}
+		else if (option.equals("Inspect"))
+		{
+			switch (event.getMenuAction())
+			{
+				case GAME_OBJECT_FIRST_OPTION:
+				case GAME_OBJECT_SECOND_OPTION:
+				case GAME_OBJECT_THIRD_OPTION:
+				case GAME_OBJECT_FOURTH_OPTION:
+				case GAME_OBJECT_FIFTH_OPTION:
+					type = ExamineType.PATCH_INSPECT;
+					break;
+				default:
+					return;
+			}
+		}
+		else
 		{
 			return;
 		}
 
-		ExamineType type;
 		int id = event.getId();
 		int actionParam = event.getActionParam();
 		int wId = event.getWidgetId();
-		switch (event.getMenuAction())
-		{
-			case EXAMINE_ITEM:
-				if (!config.showItemExamines())
-				{
-					return;
-				}
-				type = ExamineType.ITEM;
-				break;
-			case EXAMINE_ITEM_GROUND:
-				if (!config.showGroundItemExamines())
-				{
-					return;
-				}
-				type = ExamineType.ITEM_GROUND;
-				break;
-			case CC_OP_LOW_PRIORITY:
-				if (!config.showItemExamines())
-				{
-					return;
-				}
-				type = ExamineType.ITEM_INTERFACE;
-				break;
-			case EXAMINE_OBJECT:
-				if (!config.showObjectExamines())
-				{
-					return;
-				}
-				type = ExamineType.OBJECT;
-				break;
-			case EXAMINE_NPC:
-				if (!config.showNPCExamines())
-				{
-					return;
-				}
-				type = ExamineType.NPC;
-				break;
-			case GAME_OBJECT_FIRST_OPTION:
-			case GAME_OBJECT_SECOND_OPTION:
-			case GAME_OBJECT_THIRD_OPTION:
-			case GAME_OBJECT_FOURTH_OPTION:
-			case GAME_OBJECT_FIFTH_OPTION:
-				type = ExamineType.PATCH_INSPECT;
-				break;
-			default:
-				return;
-		}
 
 		ExamineTextTime examine = new ExamineTextTime();
 		examine.setType(type);
@@ -172,6 +184,8 @@ public class ExamineTooltipPlugin extends Plugin
 
 		if (type == ExamineType.PATCH_INSPECT)
 		{
+			// Patch inspects require the player to move up to the patch.
+			// They have to be treated separately and cannot be queued.
 			pendingPatchInspect = examine;
 		}
 		else
