@@ -1,5 +1,5 @@
 # Examine Tooltip
-Adds a tooltip underneath your cursor when examining things.
+Adds a tooltip underneath your cursor when examining things or inspecting farming patches.
 
 ![Examine Tooltip in Action](examine_tooltip_example.gif)
 
