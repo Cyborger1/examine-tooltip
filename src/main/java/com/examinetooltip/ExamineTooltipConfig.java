@@ -210,10 +210,24 @@ public interface ExamineTooltipConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "patchInspectExtraTime",
+		name = "Patch extra time",
+		description = "Add extra time to show the tooltip when inspecting farming patches (the text is typically quite long)",
+		position = 22,
+		section = displaySettings
+	)
+	@Units(Units.SECONDS)
+	@Range(max = 10)
+	default int patchInspectExtraTime()
+	{
+		return 2;
+	}
+
+	@ConfigItem(
 		keyName = "wrapTooltip",
 		name = "Wrap tooltip",
 		description = "Wrap the text in the tooltip if it gets too long",
-		position = 22,
+		position = 23,
 		section = displaySettings
 	)
 	default boolean wrapTooltip()
@@ -225,7 +239,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltipColumns",
 		name = "Wrap columns",
 		description = "How many text columns (or characters) before wrapping the text",
-		position = 23,
+		position = 24,
 		section = displaySettings
 	)
 	@Range(
@@ -241,7 +255,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "customBackgroundColor",
 		name = "Custom background color",
 		description = "Use a custom background color instead of the globally configured overlay background default",
-		position = 24,
+		position = 25,
 		section = displaySettings
 	)
 	Color customBackgroundColor();

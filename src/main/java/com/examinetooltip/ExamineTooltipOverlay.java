@@ -72,13 +72,25 @@ public class ExamineTooltipOverlay extends Overlay
 	public Dimension render(Graphics2D graphics)
 	{
 		Instant now = Instant.now();
-		Duration timeout = Duration.ofSeconds(config.tooltipTimeout());
+		Duration defaultTimeout = Duration.ofSeconds(config.tooltipTimeout());
+		Duration patchTimeout = Duration.ofSeconds(defaultTimeout.getSeconds() + config.patchInspectExtraTime());
 		boolean shouldClearDimMap = !dimMap.isEmpty();
 		boolean shouldClearRectMap = !rectMap.isEmpty();
 
 		for (ExamineTextTime examine : plugin.getExamines())
 		{
 			Duration since = Duration.between(examine.getTime(), now);
+			Duration timeout;
+
+			if (examine.getType() == ExamineType.PATCH_INSPECT)
+			{
+				timeout = patchTimeout;
+			}
+			else
+			{
+				timeout = defaultTimeout;
+			}
+
 			if (since.compareTo(timeout) < 0)
 			{
 				long timeLeft = (timeout.minus(since)).toMillis();
