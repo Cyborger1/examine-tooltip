@@ -59,7 +59,15 @@ public interface ExamineTooltipConfig extends Config
 		description = "Settings relating to how the examine box is displayed visually",
 		position = 2
 	)
-	String displaySettings = "Box display settings";
+	String displaySettings = "boxDisplaySettings";
+
+	@ConfigSection(
+		name = "Plugin hub compatibility",
+		description = "Settings to enable compatibility with other plugin hub plugins",
+		position = 3,
+		closedByDefault = true
+	)
+	String pluginHubCompatibility = "pluginHubCompatibility";
 
 	@ConfigItem(
 		keyName = "rs3Style",
@@ -259,4 +267,16 @@ public interface ExamineTooltipConfig extends Config
 		section = displaySettings
 	)
 	Color customBackgroundColor();
+
+	@ConfigItem(
+		keyName = "showPluginHubPatchPayment",
+		name = "Zaaack's Patch Payment",
+		description = "Show text from PolishToaster's Patch Payment plugin, always shown as cursor tooltip",
+		position = 50,
+		section = pluginHubCompatibility
+	)
+	default boolean showPluginHubPatchPayment()
+	{
+		return false;
+	}
 }
