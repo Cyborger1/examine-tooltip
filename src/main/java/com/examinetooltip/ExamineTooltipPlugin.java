@@ -62,6 +62,13 @@ public class ExamineTooltipPlugin extends Plugin
 		"^An? .+ patch can NOT be protected by a farmer"
 	);
 
+	private static final ImmutableSet<ChatMessageType> VALID_CHAT_MESSAGE_TYPES = ImmutableSet.of(
+		ChatMessageType.ITEM_EXAMINE,
+		ChatMessageType.NPC_EXAMINE,
+		ChatMessageType.OBJECT_EXAMINE,
+		ChatMessageType.GAMEMESSAGE
+	);
+
 	@Inject
 	private OverlayManager overlayManager;
 
@@ -77,6 +84,25 @@ public class ExamineTooltipPlugin extends Plugin
 	private final Queue<ExamineTextTime> pendingExamines = new ArrayDeque<>();
 
 	private ExamineTextTime pendingPatchInspect;
+
+	private final ImmutableMap<String, ChatMessageType> SLAYER_RING_MAP = ImmutableMap.of("Check", ChatMessageType.GAMEMESSAGE);
+
+	private final ImmutableMap<Integer, ImmutableMap<String, ChatMessageType>> ITEM_EXPECTED_CHAT_MESSAGE =
+		ImmutableMap.<Integer, ImmutableMap<String, ChatMessageType>>builder()
+			.put(ItemID.BONECRUSHER,
+				ImmutableMap.of(
+					"Activity", ChatMessageType.GAMEMESSAGE,
+					"Check", ChatMessageType.GAMEMESSAGE))
+			.put(ItemID.SLAYER_RING_1, SLAYER_RING_MAP)
+			.put(ItemID.SLAYER_RING_2, SLAYER_RING_MAP)
+			.put(ItemID.SLAYER_RING_3, SLAYER_RING_MAP)
+			.put(ItemID.SLAYER_RING_4, SLAYER_RING_MAP)
+			.put(ItemID.SLAYER_RING_5, SLAYER_RING_MAP)
+			.put(ItemID.SLAYER_RING_6, SLAYER_RING_MAP)
+			.put(ItemID.SLAYER_RING_7, SLAYER_RING_MAP)
+			.put(ItemID.SLAYER_RING_8, SLAYER_RING_MAP)
+			.put(ItemID.SLAYER_RING_ETERNAL, SLAYER_RING_MAP)
+			.build();
 
 	@Provides
 	ExamineTooltipConfig provideConfig(ConfigManager configManager)
@@ -116,6 +142,11 @@ public class ExamineTooltipPlugin extends Plugin
 	{
 		String option = Text.removeTags(event.getMenuOption());
 
+		int id = event.getId();
+		int actionParam = event.getActionParam();
+		int wId = event.getWidgetId();
+
+		ChatMessageType expected;
 		ExamineType type;
 		if (option.equals("Examine"))
 		{
@@ -127,6 +158,7 @@ public class ExamineTooltipPlugin extends Plugin
 						return;
 					}
 					type = ExamineType.ITEM;
+					expected = ChatMessageType.ITEM_EXAMINE;
 					break;
 				case EXAMINE_ITEM_GROUND:
 					if (!config.showGroundItemExamines())
@@ -134,6 +166,7 @@ public class ExamineTooltipPlugin extends Plugin
 						return;
 					}
 					type = ExamineType.ITEM_GROUND;
+					expected = ChatMessageType.ITEM_EXAMINE;
 					break;
 				case CC_OP_LOW_PRIORITY:
 					if (!config.showItemExamines())
@@ -141,6 +174,7 @@ public class ExamineTooltipPlugin extends Plugin
 						return;
 					}
 					type = ExamineType.ITEM_INTERFACE;
+					expected = ChatMessageType.GAMEMESSAGE;
 					break;
 				case EXAMINE_OBJECT:
 					if (!config.showObjectExamines())
@@ -148,6 +182,7 @@ public class ExamineTooltipPlugin extends Plugin
 						return;
 					}
 					type = ExamineType.OBJECT;
+					expected = ChatMessageType.OBJECT_EXAMINE;
 					break;
 				case EXAMINE_NPC:
 					if (!config.showNPCExamines())
@@ -155,6 +190,7 @@ public class ExamineTooltipPlugin extends Plugin
 						return;
 					}
 					type = ExamineType.NPC;
+					expected = ChatMessageType.NPC_EXAMINE;
 					break;
 				default:
 					return;
@@ -170,6 +206,7 @@ public class ExamineTooltipPlugin extends Plugin
 				case GAME_OBJECT_FOURTH_OPTION:
 				case GAME_OBJECT_FIFTH_OPTION:
 					type = ExamineType.PATCH_INSPECT;
+					expected = ChatMessageType.GAMEMESSAGE;
 					break;
 				default:
 					return;
@@ -177,15 +214,50 @@ public class ExamineTooltipPlugin extends Plugin
 		}
 		else
 		{
-			return;
-		}
+			ImmutableMap<String, ChatMessageType> messageMap;
+			switch (event.getMenuAction())
+			{
+				case ITEM_SECOND_OPTION:
+				case ITEM_THIRD_OPTION:
+				case ITEM_FOURTH_OPTION:
+				case ITEM_FIFTH_OPTION:
+				case CC_OP:
+				case CC_OP_LOW_PRIORITY:
+					if (!config.showItemExamines())
+					{
+						return;
+					}
+					messageMap = ITEM_EXPECTED_CHAT_MESSAGE.get(id);
+					if (event.getMenuAction() == MenuAction.CC_OP
+						|| event.getMenuAction() == MenuAction.CC_OP_LOW_PRIORITY)
+					{
+						type = ExamineType.ITEM_INTERFACE;
+					}
+					else
+					{
+						type = ExamineType.ITEM;
+					}
+					break;
 
-		int id = event.getId();
-		int actionParam = event.getActionParam();
-		int wId = event.getWidgetId();
+				default:
+					return;
+			}
+
+			if (messageMap == null)
+			{
+				return;
+			}
+
+			expected = messageMap.get(option);
+			if (expected == null)
+			{
+				return;
+			}
+		}
 
 		ExamineTextTime examine = new ExamineTextTime();
 		examine.setType(type);
+		examine.setExpectedMessageType(expected);
 		examine.setId(id);
 		examine.setWidgetId(wId);
 		examine.setActionParam(actionParam);
@@ -205,98 +277,68 @@ public class ExamineTooltipPlugin extends Plugin
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
-		String text = Text.removeTags(event.getMessage());
-		ExamineType type;
-		switch (event.getType())
+		ChatMessageType messageType = event.getType();
+		if (!VALID_CHAT_MESSAGE_TYPES.contains(messageType))
 		{
-			case ITEM_EXAMINE:
-				if (text.startsWith("Price of"))
-				{
-					type = ExamineType.PRICE_CHECK;
-				}
-				else if (checkPluginHubPatchPaymentException(text))
-				{
-					type = ExamineType.PLUGIN_HUB_PATCH_PAYMENT;
-				}
-				else
-				{
-					type = ExamineType.ITEM;
-				}
-				break;
-			case OBJECT_EXAMINE:
-				type = ExamineType.OBJECT;
-				break;
-			case NPC_EXAMINE:
-				type = ExamineType.NPC;
-				break;
-			case GAMEMESSAGE:
-				if (PATCH_INSPECT_PATTERN.matcher(event.getMessage()).lookingAt())
-				{
-					type = ExamineType.PATCH_INSPECT;
-				}
-				else if (checkPluginHubPatchPaymentException(text))
-				{
-					type = ExamineType.PLUGIN_HUB_PATCH_PAYMENT;
-				}
-				else
-				{
-					type = ExamineType.ITEM_INTERFACE;
-				}
-				break;
-			default:
-				return;
-		}
-
-		Instant now = Instant.now();
-
-		if (type == ExamineType.PRICE_CHECK
-			|| type == ExamineType.PLUGIN_HUB_PATCH_PAYMENT)
-		{
-			if ((type == ExamineType.PRICE_CHECK && config.showPriceCheck())
-				|| (type == ExamineType.PLUGIN_HUB_PATCH_PAYMENT && config.showPluginHubPatchPayment()))
-			{
-				ExamineTextTime examine = new ExamineTextTime();
-				examine.setType(type);
-				examine.setText(text);
-				examine.setTime(now);
-				examines.add(examine);
-			}
 			return;
 		}
 
-		ExamineTextTime pending;
+		Instant now = Instant.now();
+		String text = Text.removeTags(event.getMessage());
 
-		if (type == ExamineType.PATCH_INSPECT)
+		if (event.getType() == ChatMessageType.ITEM_EXAMINE)
+		{
+			if (text.startsWith("Price of"))
+			{
+				if (config.showPriceCheck())
+				{
+					ExamineTextTime examine = new ExamineTextTime();
+					examine.setType(ExamineType.PRICE_CHECK);
+					examine.setText(text);
+					examine.setTime(now);
+					examines.add(examine);
+				}
+				return;
+			}
+			else if (checkPluginHubPatchPaymentException(text))
+			{
+				if(config.showPluginHubPatchPayment())
+				{
+					ExamineTextTime examine = new ExamineTextTime();
+					examine.setType(ExamineType.PLUGIN_HUB_PATCH_PAYMENT);
+					examine.setText(text);
+					examine.setTime(now);
+					examines.add(examine);
+				}
+				return;
+			}
+		}
+
+		ExamineTextTime pending = null;
+		if (event.getType() == ChatMessageType.GAMEMESSAGE
+			&& PATCH_INSPECT_PATTERN.matcher(event.getMessage()).lookingAt())
 		{
 			if (pendingPatchInspect != null && config.showPatchInspects())
 			{
 				pending = pendingPatchInspect;
 				pendingPatchInspect = null;
 			}
-			else
-			{
-				return;
-			}
-		}
-		else if (!pendingExamines.isEmpty())
-		{
-			pending = pendingExamines.poll();
 		}
 		else
 		{
-			return;
+			pending = pendingExamines.poll();
+			if (pending != null && messageType != pending.getExpectedMessageType())
+			{
+				pendingExamines.clear();
+			}
 		}
 
-		if (pending.getType() == type || (type == ExamineType.ITEM && pending.getType() == ExamineType.ITEM_GROUND))
+		if (pending != null)
 		{
 			pending.setTime(now);
 			pending.setText(text);
 			examines.removeIf(x -> x.getText().equals(text));
 			examines.add(pending);
-		}
-		else
-		{
-			pendingExamines.clear();
 		}
 	}
 

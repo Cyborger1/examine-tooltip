@@ -25,20 +25,15 @@
  */
 package com.examinetooltip;
 
-import java.time.Instant;
+import java.util.function.BooleanSupplier;
+import lombok.Builder;
 import lombok.Data;
 import net.runelite.api.ChatMessageType;
 
 @Data
-public class ExamineTextTime
+@Builder
+public class ExpectedExamineDefinition
 {
-	private ExamineType type;
-	private ChatMessageType expectedMessageType;
-
-	private int id;
-	private int widgetId;
-	private int actionParam;
-
-	private String text;
-	private Instant time;
+	private ChatMessageType messageType;
+	private BooleanSupplier showSupplier;
 }
