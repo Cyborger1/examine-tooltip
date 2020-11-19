@@ -72,13 +72,25 @@ public class ExamineTooltipOverlay extends Overlay
 	public Dimension render(Graphics2D graphics)
 	{
 		Instant now = Instant.now();
-		Duration timeout = Duration.ofSeconds(config.tooltipTimeout());
+		Duration defaultTimeout = Duration.ofSeconds(config.tooltipTimeout());
+		Duration patchTimeout = Duration.ofSeconds(defaultTimeout.getSeconds() + config.patchInspectExtraTime());
 		boolean shouldClearDimMap = !dimMap.isEmpty();
 		boolean shouldClearRectMap = !rectMap.isEmpty();
 
 		for (ExamineTextTime examine : plugin.getExamines())
 		{
 			Duration since = Duration.between(examine.getTime(), now);
+			Duration timeout;
+
+			if (examine.getType() == ExamineType.PATCH_INSPECT)
+			{
+				timeout = patchTimeout;
+			}
+			else
+			{
+				timeout = defaultTimeout;
+			}
+
 			if (since.compareTo(timeout) < 0)
 			{
 				long timeLeft = (timeout.minus(since)).toMillis();
@@ -179,6 +191,7 @@ public class ExamineTooltipOverlay extends Overlay
 				bounds = findWidgetBounds(examine.getWidgetId(), examine.getActionParam());
 				break;
 
+			case PATCH_INSPECT:
 			case ITEM_GROUND:
 			case OBJECT:
 				// Yes, for these, ActionParam and WidgetID are scene coordinates
@@ -371,20 +384,24 @@ public class ExamineTooltipOverlay extends Overlay
 					if (object != null)
 					{
 						int objId = object.getId();
-						ObjectComposition comp = client.getObjectDefinition(objId);
-						if (comp != null)
+						// PATCH_INSPECT uses the ID of the patch itself, not the contents
+						if (type != ExamineType.PATCH_INSPECT)
 						{
-							try
+							ObjectComposition comp = client.getObjectDefinition(objId);
+							if (comp != null)
 							{
-								ObjectComposition impostor = comp.getImpostor();
-								if (impostor != null)
+								try
 								{
-									objId = impostor.getId();
+									ObjectComposition impostor = comp.getImpostor();
+									if (impostor != null)
+									{
+										objId = impostor.getId();
+									}
 								}
-							}
-							catch (Exception e)
-							{
-								// Ignore
+								catch (Exception e)
+								{
+									// Ignore
+								}
 							}
 						}
 						if (objId == id)
