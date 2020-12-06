@@ -1,6 +1,7 @@
 package com.examinetooltip;
 
 import com.examinetooltip.components.AlphaTooltipComponent;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -11,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import net.runelite.api.Client;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
@@ -42,6 +44,9 @@ public class ExamineTooltipOverlay extends Overlay
 {
 	private final static int SCREEN_PADDING = 5;
 	private final static int EXAMINE_PADDING = 10;
+
+	private final static Set<ExamineType> TOOLTIP_ONLY_EXAMINE_TYPES =
+		ImmutableSet.of(ExamineType.PRICE_CHECK, ExamineType.PLUGIN_HUB_PATCH_PAYMENT);
 
 	@Inject
 	private TooltipManager tooltipManager;
@@ -105,7 +110,7 @@ public class ExamineTooltipOverlay extends Overlay
 					alpha = 1.0;
 				}
 
-				if (!config.rs3Style() || examine.getType() == ExamineType.PRICE_CHECK)
+				if (!config.rs3Style() || TOOLTIP_ONLY_EXAMINE_TYPES.contains(examine.getType()))
 				{
 					renderAsTooltip(examine, alpha);
 				}

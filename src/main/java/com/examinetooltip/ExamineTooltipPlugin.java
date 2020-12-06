@@ -52,7 +52,15 @@ import net.runelite.client.util.Text;
 )
 public class ExamineTooltipPlugin extends Plugin
 {
-	private static Pattern PATCH_INSPECT_PATTERN = Pattern.compile("^This is an? .+\\. The (?:soil|patch) has");
+	private static final Pattern PATCH_INSPECT_PATTERN = Pattern.compile("^This is an? .+\\. The (?:soil|patch) has");
+
+	private static final Pattern PLUGIN_HUB_PATCH_PAYMENT_1_PATTERN = Pattern.compile(
+		"^A farmer will watch over an? .+ patch for"
+	);
+
+	private static final Pattern PLUGIN_HUB_PATCH_PAYMENT_2_PATTERN = Pattern.compile(
+		"^An? .+ patch can NOT be protected by a farmer"
+	);
 
 	@Inject
 	private OverlayManager overlayManager;
@@ -197,13 +205,18 @@ public class ExamineTooltipPlugin extends Plugin
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
+		String text = Text.removeTags(event.getMessage());
 		ExamineType type;
 		switch (event.getType())
 		{
 			case ITEM_EXAMINE:
-				if (Text.removeTags(event.getMessage()).startsWith("Price of"))
+				if (text.startsWith("Price of"))
 				{
 					type = ExamineType.PRICE_CHECK;
+				}
+				else if (checkPluginHubPatchPaymentException(text))
+				{
+					type = ExamineType.PLUGIN_HUB_PATCH_PAYMENT;
 				}
 				else
 				{
@@ -221,6 +234,10 @@ public class ExamineTooltipPlugin extends Plugin
 				{
 					type = ExamineType.PATCH_INSPECT;
 				}
+				else if (checkPluginHubPatchPaymentException(text))
+				{
+					type = ExamineType.PLUGIN_HUB_PATCH_PAYMENT;
+				}
 				else
 				{
 					type = ExamineType.ITEM_INTERFACE;
@@ -231,11 +248,12 @@ public class ExamineTooltipPlugin extends Plugin
 		}
 
 		Instant now = Instant.now();
-		String text = Text.removeTags(event.getMessage());
 
-		if (type == ExamineType.PRICE_CHECK)
+		if (type == ExamineType.PRICE_CHECK
+			|| type == ExamineType.PLUGIN_HUB_PATCH_PAYMENT)
 		{
-			if (config.showPriceCheck())
+			if ((type == ExamineType.PRICE_CHECK && config.showPriceCheck())
+				|| (type == ExamineType.PLUGIN_HUB_PATCH_PAYMENT && config.showPluginHubPatchPayment()))
 			{
 				ExamineTextTime examine = new ExamineTextTime();
 				examine.setType(type);
@@ -280,5 +298,11 @@ public class ExamineTooltipPlugin extends Plugin
 		{
 			pendingExamines.clear();
 		}
+	}
+
+	private boolean checkPluginHubPatchPaymentException(String text)
+	{
+		return PLUGIN_HUB_PATCH_PAYMENT_1_PATTERN.matcher(text).lookingAt()
+			|| PLUGIN_HUB_PATCH_PAYMENT_2_PATTERN.matcher(text).lookingAt();
 	}
 }
