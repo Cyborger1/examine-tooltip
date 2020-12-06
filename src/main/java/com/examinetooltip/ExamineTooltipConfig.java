@@ -277,6 +277,6 @@ public interface ExamineTooltipConfig extends Config
 	)
 	default boolean showPluginHubPatchPayment()
 	{
-		return false;
+		return true;
 	}
 }
