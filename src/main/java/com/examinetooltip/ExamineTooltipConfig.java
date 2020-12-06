@@ -270,7 +270,7 @@ public interface ExamineTooltipConfig extends Config
 
 	@ConfigItem(
 		keyName = "showPluginHubPatchPayment",
-		name = "Zaaack's Patch Payment",
+		name = "PolishToaster's Patch Payment",
 		description = "Show text from PolishToaster's Patch Payment plugin, always shown as cursor tooltip",
 		position = 50,
 		section = pluginHubCompatibility
