@@ -10,6 +10,7 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,7 @@ import net.runelite.api.ObjectComposition;
 import net.runelite.api.Perspective;
 import net.runelite.api.Tile;
 import net.runelite.api.TileItem;
+import net.runelite.api.TileObject;
 import net.runelite.api.WallObject;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.widgets.Widget;
@@ -361,7 +363,6 @@ public class ExamineTooltipOverlay extends Overlay
 
 	private Shape getObjectShapeFromTile(Tile tile, ExamineType type, int id)
 	{
-		Shape shape = null;
 		if (type == ExamineType.ITEM_GROUND)
 		{
 			ItemLayer itemLayer = tile.getItemLayer();
@@ -372,8 +373,7 @@ public class ExamineTooltipOverlay extends Overlay
 				{
 					if (((TileItem) current).getId() == id)
 					{
-						shape = itemLayer.getCanvasTilePoly();
-						break;
+						return itemLayer.getCanvasTilePoly();
 					}
 					current = current.getNext();
 				}
@@ -381,74 +381,70 @@ public class ExamineTooltipOverlay extends Overlay
 		}
 		else
 		{
-			GameObject[] gameObjects = tile.getGameObjects();
-			if (gameObjects != null)
+			for (GameObject object : tile.getGameObjects())
 			{
-				for (GameObject object : gameObjects)
+				if (objectIdEquals(object, id))
 				{
-					if (object != null)
+					Shape shape = object.getConvexHull();
+					if (shape != null)
 					{
-						int objId = object.getId();
-						// PATCH_INSPECT uses the ID of the patch itself, not the contents
-						if (type != ExamineType.PATCH_INSPECT)
-						{
-							ObjectComposition comp = client.getObjectDefinition(objId);
-							if (comp != null)
-							{
-								try
-								{
-									ObjectComposition impostor = comp.getImpostor();
-									if (impostor != null)
-									{
-										objId = impostor.getId();
-									}
-								}
-								catch (Exception e)
-								{
-									// Ignore
-								}
-							}
-						}
-						if (objId == id)
-						{
-							shape = object.getConvexHull();
-							if (shape != null)
-							{
-								break;
-							}
-						}
+						return shape;
 					}
 				}
 			}
 
-			if (shape == null)
+			GroundObject gObj = tile.getGroundObject();
+			if (objectIdEquals(gObj, id))
 			{
-				GroundObject object = tile.getGroundObject();
-				if (object != null && object.getId() == id)
+				Shape shape = gObj.getConvexHull();
+				if (shape != null)
 				{
-					shape = object.getConvexHull();
+					return shape;
 				}
 			}
 
-			if (shape == null)
+			DecorativeObject dObj = tile.getDecorativeObject();
+			if (objectIdEquals(dObj, id))
 			{
-				DecorativeObject object = tile.getDecorativeObject();
-				if (object != null && object.getId() == id)
+				Shape shape = dObj.getConvexHull();
+				if (shape != null)
 				{
-					shape = object.getConvexHull();
+					return shape;
 				}
 			}
 
-			if (shape == null)
+			WallObject wObj = tile.getWallObject();
+			if (objectIdEquals(wObj, id))
 			{
-				WallObject object = tile.getWallObject();
-				if (object != null && object.getId() == id)
-				{
-					shape = object.getConvexHull();
-				}
+				return wObj.getConvexHull();
 			}
 		}
 
-		return shape;
+		return null;
+	}
+
+	// From ObjectIndicators plugin
+	private boolean objectIdEquals(TileObject tileObject, int id)
+	{
+		if (tileObject == null)
+		{
+			return false;
+		}
+
+		if (tileObject.getId() == id)
+		{
+			return true;
+		}
+
+		// Menu action EXAMINE_OBJECT sends the transformed object id, not the base id, unlike
+		// all of the GAME_OBJECT_OPTION actions, so check the id against the impostor ids
+		final ObjectComposition comp = client.getObjectDefinition(tileObject.getId());
+
+		if (comp.getImpostorIds() != null)
+		{
+			return Arrays.stream(comp.getImpostorIds()).anyMatch(imp -> imp == id);
+		}
+
+		return false;
 	}
 }
