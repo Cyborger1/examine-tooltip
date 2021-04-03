@@ -25,7 +25,10 @@
  */
 package com.examinetooltip;
 
+import static com.examinetooltip.ItemActionMap.ITEM_EXPECTED_CHAT_MESSAGE;
 import com.google.common.collect.EvictingQueue;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import java.time.Instant;
 import java.util.ArrayDeque;
@@ -34,9 +37,15 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
+import net.runelite.api.ChatMessageType;
+import net.runelite.api.Client;
+import net.runelite.api.MenuAction;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuOptionClicked;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetID;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -78,31 +87,15 @@ public class ExamineTooltipPlugin extends Plugin
 	@Inject
 	private ExamineTooltipConfig config;
 
+	@Inject
+	private Client client;
+
 	@Getter
 	private final EvictingQueue<ExamineTextTime> examines = EvictingQueue.create(5);
 
 	private final Queue<ExamineTextTime> pendingExamines = new ArrayDeque<>();
 
 	private ExamineTextTime pendingPatchInspect;
-
-	private final ImmutableMap<String, ChatMessageType> SLAYER_RING_MAP = ImmutableMap.of("Check", ChatMessageType.GAMEMESSAGE);
-
-	private final ImmutableMap<Integer, ImmutableMap<String, ChatMessageType>> ITEM_EXPECTED_CHAT_MESSAGE =
-		ImmutableMap.<Integer, ImmutableMap<String, ChatMessageType>>builder()
-			.put(ItemID.BONECRUSHER,
-				ImmutableMap.of(
-					"Activity", ChatMessageType.GAMEMESSAGE,
-					"Check", ChatMessageType.GAMEMESSAGE))
-			.put(ItemID.SLAYER_RING_1, SLAYER_RING_MAP)
-			.put(ItemID.SLAYER_RING_2, SLAYER_RING_MAP)
-			.put(ItemID.SLAYER_RING_3, SLAYER_RING_MAP)
-			.put(ItemID.SLAYER_RING_4, SLAYER_RING_MAP)
-			.put(ItemID.SLAYER_RING_5, SLAYER_RING_MAP)
-			.put(ItemID.SLAYER_RING_6, SLAYER_RING_MAP)
-			.put(ItemID.SLAYER_RING_7, SLAYER_RING_MAP)
-			.put(ItemID.SLAYER_RING_8, SLAYER_RING_MAP)
-			.put(ItemID.SLAYER_RING_ETERNAL, SLAYER_RING_MAP)
-			.build();
 
 	@Provides
 	ExamineTooltipConfig provideConfig(ConfigManager configManager)
@@ -217,17 +210,43 @@ public class ExamineTooltipPlugin extends Plugin
 			ImmutableMap<String, ChatMessageType> messageMap;
 			switch (event.getMenuAction())
 			{
+				case ITEM_FIRST_OPTION:
 				case ITEM_SECOND_OPTION:
 				case ITEM_THIRD_OPTION:
 				case ITEM_FOURTH_OPTION:
 				case ITEM_FIFTH_OPTION:
 				case CC_OP:
 				case CC_OP_LOW_PRIORITY:
-					if (!config.showItemExamines())
+					if (!config.showItemMessages())
 					{
 						return;
 					}
-					messageMap = ITEM_EXPECTED_CHAT_MESSAGE.get(id);
+
+					int actualId;
+					// Snag ITEM ID when checked in equipment widget
+					if (WidgetInfo.TO_GROUP(wId) == WidgetID.EQUIPMENT_GROUP_ID
+						|| WidgetInfo.TO_GROUP(wId) == 84)
+					{
+						Widget w = client.getWidget(wId);
+						if (w == null)
+						{
+							return;
+						}
+
+						Widget item = w.getChild(1);
+						if (item == null)
+						{
+							return;
+						}
+
+						actualId = item.getItemId();
+					}
+					else
+					{
+						actualId = id;
+					}
+
+					messageMap = ITEM_EXPECTED_CHAT_MESSAGE.get(actualId);
 					if (event.getMenuAction() == MenuAction.CC_OP
 						|| event.getMenuAction() == MenuAction.CC_OP_LOW_PRIORITY)
 					{
@@ -284,7 +303,7 @@ public class ExamineTooltipPlugin extends Plugin
 		}
 
 		Instant now = Instant.now();
-		String text = Text.removeTags(event.getMessage());
+		String text = Text.removeTags(event.getMessage().replace("<br>", " "));
 
 		if (event.getType() == ChatMessageType.ITEM_EXAMINE)
 		{
@@ -302,7 +321,7 @@ public class ExamineTooltipPlugin extends Plugin
 			}
 			else if (checkPluginHubPatchPaymentException(text))
 			{
-				if(config.showPluginHubPatchPayment())
+				if (config.showPluginHubPatchPayment())
 				{
 					ExamineTextTime examine = new ExamineTextTime();
 					examine.setType(ExamineType.PLUGIN_HUB_PATCH_PAYMENT);
@@ -330,6 +349,7 @@ public class ExamineTooltipPlugin extends Plugin
 			if (pending != null && messageType != pending.getExpectedMessageType())
 			{
 				pendingExamines.clear();
+				return;
 			}
 		}
 
@@ -348,3 +368,18 @@ public class ExamineTooltipPlugin extends Plugin
 			|| PLUGIN_HUB_PATCH_PAYMENT_2_PATTERN.matcher(text).lookingAt();
 	}
 }
+
+/*
+subscribe(MenuOptionClicked.class, ev ->
+{
+	log.debug(String.format("ev: %s, id: %d, act: %d, wid: %d",
+		ev.getMenuOption(), ev.getId(), ev.getActionParam(), ev.getWidgetId()));
+});
+
+subscribe(ChatMessage.class, ev ->
+{
+	log.debug(String.format("type: %s, mess: %s",
+		ev.getType(), ev.getMessage()));
+});
+
+ */
