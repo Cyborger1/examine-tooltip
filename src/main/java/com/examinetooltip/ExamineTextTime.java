@@ -41,4 +41,6 @@ public class ExamineTextTime
 
 	private String text;
 	private Instant time;
+
+	private int actionTick;
 }

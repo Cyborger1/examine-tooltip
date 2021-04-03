@@ -78,6 +78,9 @@ public class ExamineTooltipPlugin extends Plugin
 		ChatMessageType.GAMEMESSAGE
 	);
 
+	private static final int EQUIPMENT_FLOATING_GROUP_ID = 84;
+	private static final int EXAMINE_TICK_GRACE_PERIOD = 1;
+
 	@Inject
 	private OverlayManager overlayManager;
 
@@ -224,8 +227,9 @@ public class ExamineTooltipPlugin extends Plugin
 
 					int actualId;
 					// Snag ITEM ID when checked in equipment widget
-					if (WidgetInfo.TO_GROUP(wId) == WidgetID.EQUIPMENT_GROUP_ID
-						|| WidgetInfo.TO_GROUP(wId) == 84)
+					int wGroup = WidgetInfo.TO_GROUP(wId);
+					if (wGroup == WidgetID.EQUIPMENT_GROUP_ID
+						|| wGroup == EQUIPMENT_FLOATING_GROUP_ID)
 					{
 						Widget w = client.getWidget(wId);
 						if (w == null)
@@ -275,6 +279,7 @@ public class ExamineTooltipPlugin extends Plugin
 		}
 
 		ExamineTextTime examine = new ExamineTextTime();
+		examine.setActionTick(client.getTickCount());
 		examine.setType(type);
 		examine.setExpectedMessageType(expected);
 		examine.setId(id);
@@ -346,7 +351,9 @@ public class ExamineTooltipPlugin extends Plugin
 		else
 		{
 			pending = pendingExamines.poll();
-			if (pending != null && messageType != pending.getExpectedMessageType())
+			if (pending != null
+				&& (messageType != pending.getExpectedMessageType()
+					|| pending.getActionTick() < client.getTickCount() - EXAMINE_TICK_GRACE_PERIOD))
 			{
 				pendingExamines.clear();
 				return;
