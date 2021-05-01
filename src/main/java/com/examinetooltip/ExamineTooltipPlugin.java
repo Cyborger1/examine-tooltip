@@ -135,6 +135,7 @@ public class ExamineTooltipPlugin extends Plugin
 					}
 					type = ExamineType.ITEM_GROUND;
 					break;
+				case CC_OP:
 				case CC_OP_LOW_PRIORITY:
 					if (!config.showItemExamines())
 					{
