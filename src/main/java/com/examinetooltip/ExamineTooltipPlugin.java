@@ -121,13 +121,6 @@ public class ExamineTooltipPlugin extends Plugin
 		{
 			switch (event.getMenuAction())
 			{
-				case EXAMINE_ITEM:
-					if (!config.showItemExamines())
-					{
-						return;
-					}
-					type = ExamineType.ITEM;
-					break;
 				case EXAMINE_ITEM_GROUND:
 					if (!config.showGroundItemExamines())
 					{
@@ -182,8 +175,8 @@ public class ExamineTooltipPlugin extends Plugin
 		}
 
 		int id = event.getId();
-		int actionParam = event.getActionParam();
-		int wId = event.getWidgetId();
+		int actionParam = event.getParam0(); // Action Param
+		int wId = event.getParam1(); // Widget ID
 
 		ExamineTextTime examine = new ExamineTextTime();
 		examine.setType(type);
@@ -221,7 +214,7 @@ public class ExamineTooltipPlugin extends Plugin
 				}
 				else
 				{
-					type = ExamineType.ITEM;
+					type = ExamineType.ITEM_INTERFACE;
 				}
 				break;
 			case OBJECT_EXAMINE:
@@ -288,7 +281,7 @@ public class ExamineTooltipPlugin extends Plugin
 			return;
 		}
 
-		if (pending.getType() == type || (type == ExamineType.ITEM && pending.getType() == ExamineType.ITEM_GROUND))
+		if (pending.getType() == type || (type == ExamineType.ITEM_INTERFACE && pending.getType() == ExamineType.ITEM_GROUND))
 		{
 			pending.setTime(now);
 			pending.setText(text);

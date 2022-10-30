@@ -31,7 +31,6 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.widgets.Widget;
 import static net.runelite.api.widgets.WidgetInfo.TO_CHILD;
 import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
-import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.config.RuneLiteConfig;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -181,19 +180,6 @@ public class ExamineTooltipOverlay extends Overlay
 				}
 				break;
 
-			case ITEM:
-				int wId = examine.getWidgetId();
-				Widget widget = client.getWidget(TO_GROUP(wId), TO_CHILD(wId));
-				if (widget != null)
-				{
-					WidgetItem widgetItem = widget.getWidgetItem(examine.getActionParam());
-					if (widgetItem != null)
-					{
-						bounds = widgetItem.getCanvasBounds(false);
-					}
-				}
-				break;
-
 			case ITEM_INTERFACE:
 				bounds = findWidgetBounds(examine.getWidgetId(), examine.getActionParam());
 				break;
@@ -254,7 +240,7 @@ public class ExamineTooltipOverlay extends Overlay
 			return;
 		}
 
-		boolean isInterfaceExamine = type == ExamineType.ITEM || type == ExamineType.ITEM_INTERFACE;
+		boolean isInterfaceExamine = type == ExamineType.ITEM_INTERFACE;
 
 		int x = bounds.x;
 		int y = bounds.height + bounds.y;
