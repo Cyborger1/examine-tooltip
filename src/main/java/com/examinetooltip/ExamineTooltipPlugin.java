@@ -234,7 +234,10 @@ public class ExamineTooltipPlugin extends Plugin
 				}
 				else
 				{
-					type = ExamineType.ITEM_INTERFACE;
+					// Interfaces examines are no longer GAMEMESSAGE, so stop processing here
+					// https://github.com/runelite/runelite/blob/6c7ef87cb43d70daaa71fc1cba277eaafd86429f/runelite-client/src/main/java/net/runelite/client/plugins/examine/ExaminePlugin.java#L126
+					// Previously: type = ExamineType.ITEM_INTERFACE;
+					return;
 				}
 				break;
 			default:
@@ -281,6 +284,7 @@ public class ExamineTooltipPlugin extends Plugin
 			return;
 		}
 
+		// Since we can't tell on the receiving end if an ITEM_EXAMINE is for interface items or ground items, allow an exception here.
 		if (pending.getType() == type || (type == ExamineType.ITEM_INTERFACE && pending.getType() == ExamineType.ITEM_GROUND))
 		{
 			pending.setTime(now);
