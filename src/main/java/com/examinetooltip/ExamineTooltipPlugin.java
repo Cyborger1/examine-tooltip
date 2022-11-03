@@ -121,13 +121,6 @@ public class ExamineTooltipPlugin extends Plugin
 		{
 			switch (event.getMenuAction())
 			{
-				case EXAMINE_ITEM:
-					if (!config.showItemExamines())
-					{
-						return;
-					}
-					type = ExamineType.ITEM;
-					break;
 				case EXAMINE_ITEM_GROUND:
 					if (!config.showGroundItemExamines())
 					{
@@ -182,8 +175,8 @@ public class ExamineTooltipPlugin extends Plugin
 		}
 
 		int id = event.getId();
-		int actionParam = event.getActionParam();
-		int wId = event.getWidgetId();
+		int actionParam = event.getParam0(); // Action Param
+		int wId = event.getParam1(); // Widget ID
 
 		ExamineTextTime examine = new ExamineTextTime();
 		examine.setType(type);
@@ -221,7 +214,7 @@ public class ExamineTooltipPlugin extends Plugin
 				}
 				else
 				{
-					type = ExamineType.ITEM;
+					type = ExamineType.ITEM_INTERFACE;
 				}
 				break;
 			case OBJECT_EXAMINE:
@@ -241,7 +234,10 @@ public class ExamineTooltipPlugin extends Plugin
 				}
 				else
 				{
-					type = ExamineType.ITEM_INTERFACE;
+					// Interfaces examines are no longer GAMEMESSAGE, so stop processing here
+					// https://github.com/runelite/runelite/blob/6c7ef87cb43d70daaa71fc1cba277eaafd86429f/runelite-client/src/main/java/net/runelite/client/plugins/examine/ExaminePlugin.java#L126
+					// Previously: type = ExamineType.ITEM_INTERFACE;
+					return;
 				}
 				break;
 			default:
@@ -288,7 +284,8 @@ public class ExamineTooltipPlugin extends Plugin
 			return;
 		}
 
-		if (pending.getType() == type || (type == ExamineType.ITEM && pending.getType() == ExamineType.ITEM_GROUND))
+		// Since we can't tell on the receiving end if an ITEM_EXAMINE is for interface items or ground items, allow an exception here.
+		if (pending.getType() == type || (type == ExamineType.ITEM_INTERFACE && pending.getType() == ExamineType.ITEM_GROUND))
 		{
 			pending.setTime(now);
 			pending.setText(text);
