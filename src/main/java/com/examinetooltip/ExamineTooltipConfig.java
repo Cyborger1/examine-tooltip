@@ -39,6 +39,7 @@ public interface ExamineTooltipConfig extends Config
 {
 	String CONFIG_GROUP = "examinetooltip";
 	String ITEM_EXAMINES_KEY_NAME = "showItemExamines";
+	String OVERLAY_LAYER_KEY_NAME = "overlayLayer";
 
 	@ConfigSection(
 		name = "RS3 examine settings",
@@ -267,6 +268,18 @@ public interface ExamineTooltipConfig extends Config
 		section = displaySettings
 	)
 	Color customBackgroundColor();
+
+	@ConfigItem(
+		keyName = OVERLAY_LAYER_KEY_NAME,
+		name = "Overlay Layer",
+		description = "Select on what level the tooltips are shown. Choose 'Above Widgets' to have the tooltips appear below the right-click menu, but might have unintended interaction with other interfaces in the game.",
+		position = 26,
+		section = displaySettings
+	)
+	default TooltipOverlayLayer overlayLayer()
+	{
+		return TooltipOverlayLayer.ALWAYS_ON_TOP;
+	}
 
 	@ConfigItem(
 		keyName = "showPluginHubPatchPayment",

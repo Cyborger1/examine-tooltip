@@ -39,6 +39,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -94,6 +95,7 @@ public class ExamineTooltipPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
+		examineTooltipOverlay.setLayer(config.overlayLayer().getRlLayer());
 		overlayManager.add(examineTooltipOverlay);
 		resetPlugin();
 	}
@@ -302,5 +304,16 @@ public class ExamineTooltipPlugin extends Plugin
 	{
 		return PLUGIN_HUB_PATCH_PAYMENT_1_PATTERN.matcher(text).lookingAt()
 			|| PLUGIN_HUB_PATCH_PAYMENT_2_PATTERN.matcher(text).lookingAt();
+	}
+
+	@Subscribe
+	private void onConfigChanged(ConfigChanged event)
+	{
+		if (event.getGroup().equals(ExamineTooltipConfig.CONFIG_GROUP)
+			&& event.getKey().equals(ExamineTooltipConfig.OVERLAY_LAYER_KEY_NAME))
+		{
+			examineTooltipOverlay.setLayer(config.overlayLayer().getRlLayer());
+			overlayManager.resetOverlay(examineTooltipOverlay);
+		}
 	}
 }
