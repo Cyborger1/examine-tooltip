@@ -119,10 +119,22 @@ public interface ExamineTooltipConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = OVERLAY_LAYER_KEY_NAME,
+		name = "Overlay Layer",
+		description = "Select on what level the tooltips are shown. Choose 'Above Widgets' to have the tooltips appear below the right-click menu, but might have unintended interaction with other interfaces in the game.",
+		position = 14,
+		section = rs3ExamineSettings
+	)
+	default TooltipOverlayLayer overlayLayer()
+	{
+		return TooltipOverlayLayer.ALWAYS_ON_TOP;
+	}
+
+	@ConfigItem(
 		keyName = "showPriceCheck",
 		name = "Show price check",
 		description = "Show the price check text from the Examine Plugin (\"Price of ...\"), always shown as cursor tooltip",
-		position = 14,
+		position = 20,
 		section = examineTypesSettings
 	)
 	default boolean showPriceCheck()
@@ -134,7 +146,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = ITEM_EXAMINES_KEY_NAME,
 		name = "Show interface item examines",
 		description = "Show text from examining items in interfaces (e.g. inventory, bank, etc.)",
-		position = 15,
+		position = 21,
 		section = examineTypesSettings
 	)
 	default boolean showItemExamines()
@@ -146,7 +158,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showGroundItemExamines",
 		name = "Show ground item examines",
 		description = "Show text from examining items on the ground",
-		position = 16,
+		position = 22,
 		section = examineTypesSettings
 	)
 	default boolean showGroundItemExamines()
@@ -158,7 +170,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showObjectExamines",
 		name = "Show object examines",
 		description = "Show text from examining objects (e.g. scenery)",
-		position = 17,
+		position = 23,
 		section = examineTypesSettings
 	)
 	default boolean showObjectExamines()
@@ -170,7 +182,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showNPCExamines",
 		name = "Show NPC examines",
 		description = "Show text from examining NPCs",
-		position = 18,
+		position = 24,
 		section = examineTypesSettings
 	)
 	default boolean showNPCExamines()
@@ -182,7 +194,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "showPatchInspects",
 		name = "Show farming patch inspects",
 		description = "Show text from inspecting farming patches",
-		position = 19,
+		position = 25,
 		section = examineTypesSettings
 	)
 	default boolean showPatchInspects()
@@ -194,7 +206,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "tooltipTimeout",
 		name = "Tooltip timeout",
 		description = "How long to show the examine tooltip",
-		position = 20,
+		position = 30,
 		section = displaySettings
 	)
 	@Units(Units.SECONDS)
@@ -208,7 +220,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "tooltipFadeout",
 		name = "Tooltip fadeout",
 		description = "Start fading out the tooltip X milliseconds before it disappears, 0 means no fadeout",
-		position = 21,
+		position = 31,
 		section = displaySettings
 	)
 	@Units(Units.MILLISECONDS)
@@ -222,7 +234,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "patchInspectExtraTime",
 		name = "Patch extra time",
 		description = "Add extra time to show the tooltip when inspecting farming patches (the text is typically quite long)",
-		position = 22,
+		position = 32,
 		section = displaySettings
 	)
 	@Units(Units.SECONDS)
@@ -236,7 +248,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltip",
 		name = "Wrap tooltip",
 		description = "Wrap the text in the tooltip if it gets too long",
-		position = 23,
+		position = 33,
 		section = displaySettings
 	)
 	default boolean wrapTooltip()
@@ -248,7 +260,7 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "wrapTooltipColumns",
 		name = "Wrap columns",
 		description = "How many text columns (or characters) before wrapping the text",
-		position = 24,
+		position = 34,
 		section = displaySettings
 	)
 	@Range(
@@ -264,22 +276,10 @@ public interface ExamineTooltipConfig extends Config
 		keyName = "customBackgroundColor",
 		name = "Custom background color",
 		description = "Use a custom background color instead of the globally configured overlay background default",
-		position = 25,
+		position = 35,
 		section = displaySettings
 	)
 	Color customBackgroundColor();
-
-	@ConfigItem(
-		keyName = OVERLAY_LAYER_KEY_NAME,
-		name = "Overlay Layer",
-		description = "Select on what level the tooltips are shown. Choose 'Above Widgets' to have the tooltips appear below the right-click menu, but might have unintended interaction with other interfaces in the game.",
-		position = 26,
-		section = displaySettings
-	)
-	default TooltipOverlayLayer overlayLayer()
-	{
-		return TooltipOverlayLayer.ALWAYS_ON_TOP;
-	}
 
 	@ConfigItem(
 		keyName = "showPluginHubPatchPayment",
