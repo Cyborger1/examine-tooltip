@@ -352,7 +352,7 @@ public class ExamineTooltipOverlay extends Overlay
 			ItemLayer itemLayer = tile.getItemLayer();
 			if (itemLayer != null)
 			{
-				Node current = itemLayer.getBottom();
+				Node current = itemLayer.getTop();
 				while (current instanceof TileItem)
 				{
 					if (((TileItem) current).getId() == id)
