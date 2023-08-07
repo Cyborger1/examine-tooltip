@@ -261,9 +261,9 @@ public class ExamineTooltipOverlay extends Overlay
 				if (isInterfaceExamine)
 				{
 					xMin = 0;
-					xMax = client.getCanvas().getSize().width;
+					xMax = client.getCanvasWidth();
 					yMin = 0;
-					yMax = client.getCanvas().getSize().height;
+					yMax = client.getCanvasHeight();
 				}
 				else
 				{
