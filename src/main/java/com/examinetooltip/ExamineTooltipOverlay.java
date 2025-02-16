@@ -27,14 +27,13 @@ import net.runelite.api.Tile;
 import net.runelite.api.TileItem;
 import net.runelite.api.TileObject;
 import net.runelite.api.WallObject;
+import net.runelite.api.WorldView;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.widgets.Widget;
-import static net.runelite.api.widgets.WidgetInfo.TO_CHILD;
-import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
+import net.runelite.api.widgets.WidgetUtil;
 import net.runelite.client.config.RuneLiteConfig;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayPosition;
-import net.runelite.client.ui.overlay.OverlayPriority;
 import net.runelite.client.ui.overlay.components.LayoutableRenderableEntity;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
@@ -69,7 +68,7 @@ public class ExamineTooltipOverlay extends Overlay
 	public ExamineTooltipOverlay()
 	{
 		setPosition(OverlayPosition.TOOLTIP);
-		setPriority(OverlayPriority.HIGHEST);
+		setPriority(Overlay.PRIORITY_HIGHEST);
 	}
 
 	@Override
@@ -163,11 +162,11 @@ public class ExamineTooltipOverlay extends Overlay
 	{
 		ExamineType type = examine.getType();
 		Rectangle bounds = null;
+		WorldView wv = client.getTopLevelWorldView();
 		switch (type)
 		{
 			case NPC:
-				final NPC[] cachedNPCs = client.getCachedNPCs();
-				final NPC npc = cachedNPCs[examine.getId()];
+				final NPC npc = wv.npcs().byIndex(examine.getId());
 				if (npc != null)
 				{
 					Shape shape = npc.getConvexHull();
@@ -186,11 +185,11 @@ public class ExamineTooltipOverlay extends Overlay
 			case ITEM_GROUND:
 			case OBJECT:
 				// Yes, for these, ActionParam and WidgetID are scene coordinates
-				LocalPoint point = LocalPoint.fromScene(examine.getActionParam(), examine.getWidgetId());
+				LocalPoint point = LocalPoint.fromScene(examine.getActionParam(), examine.getWidgetId(), wv);
 				int id = examine.getId();
 
-				Tile tile = client.getScene().getTiles()
-					[client.getPlane()][point.getSceneX()][point.getSceneY()];
+				Tile tile = wv.getScene().getTiles()
+					[wv.getPlane()][point.getSceneX()][point.getSceneY()];
 
 				if (tile != null)
 				{
@@ -317,7 +316,7 @@ public class ExamineTooltipOverlay extends Overlay
 
 	private Rectangle findWidgetBounds(int widgetId, int actionParam)
 	{
-		Widget widget = client.getWidget(TO_GROUP(widgetId), TO_CHILD(widgetId));
+		Widget widget = client.getWidget(WidgetUtil.componentToInterface(widgetId), WidgetUtil.componentToId(widgetId));
 
 		if (widget == null)
 		{
