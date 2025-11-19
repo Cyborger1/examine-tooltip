@@ -163,62 +163,66 @@ public class ExamineTooltipOverlay extends Overlay
 		ExamineType type = examine.getType();
 		Rectangle bounds = null;
 		WorldView wv = client.getWorldView(examine.getWorldViewId());
-		switch (type)
+		// Go to fallbacks if worldview is null (e.g. boat left before examine)
+		if (wv != null)
 		{
-			case NPC:
-				final NPC npc = wv.npcs().byIndex(examine.getId());
-				if (npc != null)
-				{
-					Shape shape = npc.getConvexHull();
-					if (shape != null)
+			switch (type)
+			{
+				case NPC:
+					final NPC npc = wv.npcs().byIndex(examine.getId());
+					if (npc != null)
 					{
-						bounds = shape.getBounds();
-					}
-				}
-				break;
-
-			case ITEM_INTERFACE:
-				bounds = findWidgetBounds(examine.getWidgetId(), examine.getActionParam());
-				break;
-
-			case PATCH_INSPECT:
-			case ITEM_GROUND:
-			case OBJECT:
-				// Yes, for these, ActionParam and WidgetID are scene coordinates
-				LocalPoint point = LocalPoint.fromScene(examine.getActionParam(), examine.getWidgetId(), wv);
-				int id = examine.getId();
-
-				Tile tile = wv.getScene().getTiles()
-					[wv.getPlane()][point.getSceneX()][point.getSceneY()];
-
-				if (tile != null)
-				{
-					Shape shape = getObjectShapeFromTile(tile, type, id);
-					if (shape == null)
-					{
-						Tile bridge = tile.getBridge();
-						if (bridge != null)
+						Shape shape = npc.getConvexHull();
+						if (shape != null)
 						{
-							shape = getObjectShapeFromTile(bridge, type, id);
+							bounds = shape.getBounds();
+						}
+					}
+					break;
+
+				case ITEM_INTERFACE:
+					bounds = findWidgetBounds(examine.getWidgetId(), examine.getActionParam());
+					break;
+
+				case PATCH_INSPECT:
+				case ITEM_GROUND:
+				case OBJECT:
+					// Yes, for these, ActionParam and WidgetID are scene coordinates
+					LocalPoint point = LocalPoint.fromScene(examine.getActionParam(), examine.getWidgetId(), wv);
+					int id = examine.getId();
+
+					Tile tile = wv.getScene().getTiles()
+						[wv.getPlane()][point.getSceneX()][point.getSceneY()];
+
+					if (tile != null)
+					{
+						Shape shape = getObjectShapeFromTile(tile, type, id);
+						if (shape == null)
+						{
+							Tile bridge = tile.getBridge();
+							if (bridge != null)
+							{
+								shape = getObjectShapeFromTile(bridge, type, id);
+							}
+						}
+
+						if (shape == null)
+						{
+							// Fallback to tile
+							shape = Perspective.getCanvasTilePoly(client, point);
+						}
+
+						if (shape != null)
+						{
+							bounds = shape.getBounds();
 						}
 					}
 
-					if (shape == null)
-					{
-						// Fallback to tile
-						shape = Perspective.getCanvasTilePoly(client, point);
-					}
+					break;
 
-					if (shape != null)
-					{
-						bounds = shape.getBounds();
-					}
-				}
-
-				break;
-
-			default:
-				return;
+				default:
+					return;
+			}
 		}
 
 		// Try previously known location
