@@ -162,7 +162,7 @@ public class ExamineTooltipOverlay extends Overlay
 	{
 		ExamineType type = examine.getType();
 		Rectangle bounds = null;
-		WorldView wv = client.getTopLevelWorldView();
+		WorldView wv = client.getWorldView(examine.getWorldViewId());
 		switch (type)
 		{
 			case NPC:
