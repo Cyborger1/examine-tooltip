@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
+import net.runelite.api.MenuEntry;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuOptionClicked;
@@ -185,6 +186,8 @@ public class ExamineTooltipPlugin extends Plugin
 		examine.setId(id);
 		examine.setWidgetId(wId);
 		examine.setActionParam(actionParam);
+		MenuEntry entry = event.getMenuEntry();
+		examine.setWorldViewId(entry != null ? entry.getWorldViewId() : -1);
 
 		if (type == ExamineType.PATCH_INSPECT)
 		{

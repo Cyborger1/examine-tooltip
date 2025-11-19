@@ -35,6 +35,7 @@ public class ExamineTextTime
 	private int id;
 	private int widgetId;
 	private int actionParam;
+	private int worldViewId;
 
 	private String text;
 	private Instant time;
